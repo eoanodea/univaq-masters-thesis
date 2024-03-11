@@ -21,6 +21,11 @@ iterations=1
 workload_iterations=200
 # Number of instances per experiment
 num_instances=5
+# Path to the Docker Compose file
+application_dir_path=""
+
+monolith_host_url=""
+microservice_host_url=""
 
 # Workflow files
 
@@ -28,7 +33,6 @@ monolith_frontend_workflow="$PROJECT_DIR/workflows/monolith/frontend.yml"
 monolith_backend_workflow="$PROJECT_DIR/workflows/monolith/workload.json"
 microservice_frontend_workflow="$PROJECT_DIR/workflows/microservice/frontend.yml"
 microservice_backend_workflow="$PROJECT_DIR/workflows/microservice/workload.json"
-
 
 # Output
 output="$PROJECT_DIR/output"
@@ -50,6 +54,7 @@ confirm_experiment() {
     - Monolith Backend workflow: $monolith_backend_workflow
     - Microservice Frontend workflow: $microservice_frontend_workflow
     - Microservice Backend workflow: $microservice_backend_workflow
+    - Docker Compose file: $application_dir_path
 
 Continue with the experiment? (y/n): " choice
 
@@ -74,7 +79,14 @@ perform_experiment() {
     --mono_frontend="$monolith_frontend_workflow" \
     --mono_backend="$monolith_backend_workflow" \
     --micro_frontend="$microservice_frontend_workflow" \
-    --micro_backend="$microservice_backend_workflow"
+    --micro_backend="$microservice_backend_workflow" \
+    --application_dir_path="$application_dir_path"
+
+  
+  echo "---------------------------------------------"
+  echo "Checking for any existing containers"
+  echo "---------------------------------------------"
+  ./scripts/shutdown.sh --all --application_dir_path="./applications/ticketmonster"
 
   echo "---------------------------------------------"
   echo "Commencing remote setup"
@@ -100,12 +112,20 @@ perform_experiment() {
   cp $PROJECT_DIR/workflows/experiment.yml $PROJECT_DIR/remote-files
   cp $PROJECT_DIR/scripts/remote-setup.sh $PROJECT_DIR/remote-files
   cp $PROJECT_DIR/scripts/remote-execute.sh $PROJECT_DIR/remote-files
+  
+  
+  if [ -f $PROJECT_DIR/remote-files/.env ]; then
+    rm $PROJECT_DIR/remote-files/.env
+  fi
+  
   touch $PROJECT_DIR/remote-files/.env
   # Store the result of the command in the variable
   ipv4_address=$(hostname -I | cut -d' ' -f1)
   echo "HOST_IP=$ipv4_address" >> $PROJECT_DIR/remote-files/.env
-  echo "HOST_URL_MONO=http://$ipv4_address:8080/ticket-monster" >> $PROJECT_DIR/remote-files/.env
-  echo "HOST_URL_MICRO=http://$ipv4_address:5000" >> $PROJECT_DIR/remote-files/.env
+  # echo "HOST_URL_MONO=http://$ipv4_address:8080/ticket-monster" >> $PROJECT_DIR/remote-files/.env
+  # echo "HOST_URL_MICRO=http://$ipv4_address:5000" >> $PROJECT_DIR/remote-files/.env
+  echo "HOST_URL_MONO=$monolith_host_url" >> $PROJECT_DIR/remote-files/.env
+  echo "HOST_URL_MICRO=$microservice_host_url" >> $PROJECT_DIR/remote-files/.env
   $PROJECT_DIR/scripts/host-setup.sh --files=$PROJECT_DIR/remote-files
 
 
@@ -134,11 +154,14 @@ perform_experiment() {
   echo "Sleep Time: $sleep_time" >> "$output_folder/test_results.csv"
   echo "Sampling Frequency: $sampling_frequency" >> "$output_folder/test_results.csv"
   echo "Number of Instances: $num_instances" >> "$output_folder/test_results.csv"
+  echo "Application Directory Path: $application_dir_path" >> "$output_folder/test_results.csv"
+  echo "Monolith Host URL: $monolith_host_url" >> "$output_folder/test_results.csv"
+  echo "Microservice Host URL: $microservice_host_url" >> "$output_folder/test_results.csv"
 
   echo "---------------------------------------------"
   echo "Commencing Monolith Experiment"
   echo "---------------------------------------------"
-  $PROJECT_DIR/scripts/startup.sh --monolith
+  $PROJECT_DIR/scripts/startup.sh --monolith --application_dir_path="$application_dir_path"
 
   sleep 5
 
@@ -152,8 +175,9 @@ $PROJECT_DIR/scripts/monitor.sh \
  --num_instances="$num_instances" \
  --frontend_workflow="$monolith_frontend_workflow" \
  --backend_workflow="$monolith_backend_workflow" \
+ --application_dir_path="$application_dir_path"
 
-  $PROJECT_DIR/scripts/shutdown.sh
+  $PROJECT_DIR/scripts/shutdown.sh --monolith --application_dir_path="$application_dir_path"
 
   datetime=$(date +"%d-%m-%yT%H-%M-%S")
   echo "Monolith Experiment: $datetime" >> "$output_folder/test_results.csv"
@@ -168,7 +192,7 @@ $PROJECT_DIR/scripts/monitor.sh \
   echo "Commencing Microservice Experiment"
   echo "---------------------------------------------"
 
-  $PROJECT_DIR/scripts/startup.sh --microservice
+  $PROJECT_DIR/scripts/startup.sh --microservice --application_dir_path="$application_dir_path"
 
   sleep 5
 
@@ -182,8 +206,9 @@ $PROJECT_DIR/scripts/monitor.sh \
     --num_instances="$num_instances" \
     --frontend_workflow="$microservice_frontend_workflow" \
     --backend_workflow="$microservice_backend_workflow" \
+    --application_dir_path="$application_dir_path"
 
-  $PROJECT_DIR/scripts/shutdown.sh
+  $PROJECT_DIR/scripts/shutdown.sh --microservice --application_dir_path="$application_dir_path"
 
   echo "---------------------------------------------"
   echo "Microservice Experiment Complete"
@@ -223,7 +248,10 @@ filtered_data = [
         "monolith_frontend_workflow": item.get("monolith_frontend_workflow", "./workflows/monolith/frontend.yml"),
         "monolith_backend_workflow": item.get("monolith_backend_workflow", "./workflows/monolith/workload.json"),
         "microservice_frontend_workflow": item.get("microservice_frontend_workflow", "./workflows/microservice/frontend.yml"),
-        "microservice_backend_workflow": item.get("microservice_backend_workflow", "./workflows/microservice/workload.json")
+        "microservice_backend_workflow": item.get("microservice_backend_workflow", "./workflows/microservice/workload.json"),
+        "application_dir_path": item.get("application_dir_path", "./docker-compose.yml"),
+        "monolith_host_url": item.get("monolith_host_url", "http://localhost:8080/ticket-monster"),
+        "microservice_host_url": item.get("microservice_host_url", "http://localhost:5000")
     }
     for item in data.get("experiments", [])
 ]
@@ -231,7 +259,7 @@ filtered_data = [
 print(json.dumps(filtered_data))
 ')
 
-experiments=($(echo "$json_data" | jq -r '.[] | "\(.iterations) \(.workload_iterations) \(.sleep_time) \(.output_folder) \(.sampling_frequency) \(.num_instances) \(.monolith_frontend_workflow) \(.monolith_backend_workflow) \(.microservice_frontend_workflow) \(.microservice_backend_workflow)"'))
+experiments=($(echo "$json_data" | jq -r '.[] | "\(.iterations) \(.workload_iterations) \(.sleep_time) \(.output_folder) \(.sampling_frequency) \(.num_instances) \(.monolith_frontend_workflow) \(.monolith_backend_workflow) \(.microservice_frontend_workflow) \(.microservice_backend_workflow) \(.application_dir_path) \(.monolith_host_url) \(.microservice_host_url)"'))
 
 
 
@@ -247,6 +275,9 @@ for ((i = 0; i < ${#experiments[@]}; i += 5)); do
   monolith_backend_workflow="${experiments[i+7]}"
   microservice_frontend_workflow="${experiments[i+8]}"
   microservice_backend_workflow="${experiments[i+9]}"
+  application_dir_path="${experiments[i+10]}"
+  monolith_host_url="${experiments[i+11]}"
+  microservice_host_url="${experiments[i+12]}"
   
   # Call the confirm_experiment function
   confirm_experiment

@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  monolith:
+    build:
+      context: ./spring-petclinic-rest/
+      dockerfile: Dockerfile
+    ports:
+      - 9966:9966
