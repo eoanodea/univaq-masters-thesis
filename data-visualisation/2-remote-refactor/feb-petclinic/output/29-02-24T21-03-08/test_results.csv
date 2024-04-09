@@ -1,0 +1,11 @@
+Ticket Monster Experiment: 29-02-24T21-03-08
+Workflow Path: ./workflows/petclinic/scenario-1/monolith/frontend.yml
+Number of Iterations: 30
+StartTimestamp: 29-02-24T21-03-08
+Workload Iterations: 50
+Sleep Time: 300
+Sampling Frequency: 1000
+Number of Instances: 5
+Monolith Experiment: 29-02-24T21-03-24
+micro Backend Test Duration: 102.085308653
+Microservice Experiment: 01-03-24T04-53-42
