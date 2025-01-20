@@ -208,6 +208,11 @@
             </exclusions>
         </dependency>
 
+        <dependency>
+            <groupId>net.ttddyy</groupId>
+            <artifactId>datasource-proxy</artifactId>
+            <version>1.7</version>
+        </dependency>
 
         <!-- Now we declare any tools needed -->
 
@@ -270,6 +275,38 @@
         <pluginManagement>
 
             <plugins>
+<!--                <plugin>-->
+<!--                    <groupId>org.jacoco</groupId>-->
+<!--                    <artifactId>jacoco-maven-plugin</artifactId>-->
+<!--                    <version>0.8.7</version> &lt;!&ndash; You can adjust the version &ndash;&gt;-->
+<!--                    <executions>-->
+<!--                        <execution>-->
+<!--                            <goals>-->
+<!--                                <goal>prepare-agent</goal> &lt;!&ndash; Attach the agent to collect coverage &ndash;&gt;-->
+<!--                                <goal>report</goal> &lt;!&ndash; Generate the report &ndash;&gt;-->
+<!--                            </goals>-->
+<!--                            <configuration>-->
+<!--                                <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory> &lt;!&ndash; Set the location of the report &ndash;&gt;-->
+<!--                            </configuration>-->
+<!--                        </execution>-->
+<!--                    </executions>-->
+<!--                </plugin>-->
+
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.8</version>
+                    <executions>
+                        <execution>
+                            <id>default-report</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
                 <!-- Compiler plugin enforces Java 1.8 compatibility and activates
               annotation processors -->
                 <plugin>

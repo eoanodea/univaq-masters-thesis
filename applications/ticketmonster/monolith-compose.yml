@@ -4,5 +4,9 @@ services:
     build:
       context: ./monolith
       dockerfile: Dockerfile
+    volumes:
+      - /data:/data
     ports:
       - 8080:8080
+      - 10001:10001
+      - 6300:6300
