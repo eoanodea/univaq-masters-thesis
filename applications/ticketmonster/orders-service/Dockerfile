@@ -1,49 +1,40 @@
 # Use a base image with Java 11 and Maven installed
-FROM maven:3.8.4-openjdk-11 AS builder
+FROM maven:3.8.4-openjdk-11 AS build
 
 WORKDIR /build
-
-# Copy over files
 COPY src ./src
 COPY pom.xml .
 
-# Build the application
-RUN mvn clean package -DskipTests
+RUN mvn verify -DskipTests
+
+RUN wget https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/0.8.7/org.jacoco.agent-0.8.7-runtime.jar -O jacocoagent.jar
 
 # Use a base image with Java 11 and WildFly
-FROM jboss/wildfly:23.0.2.Final
+FROM jboss/wildfly:23.0.2.Final AS runtime
 
-# Set the environment variables
-ENV DEPLOYMENT_DIR /opt/jboss/wildfly/standalone/deployments/
-ENV APP_NAME orders-service-1.0.0-SNAPSHOT.jar
-
-# orders-service-1.0.0-SNAPSHOT.jar
-# orders-service-1.0.0-SNAPSHOT-exec.jar
-
-# Copy the application WAR file to the deployment directory
-COPY --from=builder /build/target/${APP_NAME} ${DEPLOYMENT_DIR}
+# Set deployment directory
+ENV DEPLOYMENT_DIR=/opt/jboss/wildfly/standalone/deployments/
 
 USER root
 
-RUN yum update -y && yum install -y wget
-# RUN apt-get update && apt-get install -y wget
-# Install Java Profiler Agent
-RUN wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2023.5-docker.zip -P /tmp/ && \
-  unzip /tmp/YourKit-JavaProfiler-2023.5-docker.zip -d /usr/local && \
-  rm /tmp/YourKit-JavaProfiler-2023.5-docker.zip
+RUN mkdir -p /target && chmod -R 777 /target
 
-ENV JAVA_OPTS="$JAVA_OPTS -agentpath:/usr/local/YourKit-JavaProfiler-2023.5/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"
+COPY --from=build /build/target /build/target
+COPY --from=build /build/target/${APP_NAME} ${DEPLOYMENT_DIR}
+COPY --from=build /build/jacocoagent.jar /jacocoagent.jar
 
-USER jboss
+VOLUME ["/target"]
 
-# Expose the default HTTP port
-# EXPOSE 8080 10001
+RUN echo 'JAVA_OPTS="$JAVA_OPTS -javaagent:/jacocoagent.jar=destfile=/jacoco.exec,output=tcpserver,address=*,port=6300"' >> /opt/jboss/wildfly/bin/standalone.conf
 
-# Start WildFly in standalone mode
+EXPOSE 8080 6300
+
+RUN cp -r /build/target/* /target
+
 CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]
-# CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-agentpath:/usr/local/YourKit-JavaProfiler-2023.5/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"]
 
- 
-# # For debugging
+# For debugging
 # ENTRYPOINT ["tail"]
 # CMD ["-f","/dev/null"]
+
+

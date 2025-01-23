@@ -4,8 +4,10 @@ services:
     build:
       context: ./monolith
       dockerfile: Dockerfile
+    environment:
+      - APP_NAME=ticket-monster.war
     volumes:
-      - ./data:/data:rw
+      - ./monolith/target:/target:rw
     ports:
       - 8080:8080
       - 10001:10001

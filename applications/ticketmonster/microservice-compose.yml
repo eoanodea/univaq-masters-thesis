@@ -4,17 +4,27 @@ services:
     build:
       context: ./backend-v2
       dockerfile: Dockerfile
+    environment:
+      - APP_NAME=ROOT.war
     ports:
       - 5000:8080
+      - 6300:6300
+    volumes:
+      - ./backend-v2/target:/target:rw
     # network_mode: host
   orders-service:
     build:
       context: ./orders-service
       dockerfile: Dockerfile
+    environment:
+      - APP_NAME=orders-service-1.0.0-SNAPSHOT.jar
     ports:
       - 5001:8080
+      - 6301:6300
     depends_on:
       - backend
+    volumes:
+      - ./orders-service/target:/target:rw
     # network_mode: host
   tm-ui-v2:
     build:

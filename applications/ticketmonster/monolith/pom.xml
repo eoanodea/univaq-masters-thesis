@@ -292,7 +292,7 @@
 <!--                    </executions>-->
 <!--                </plugin>-->
 
-            <plugin>
+            <!-- <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.8</version>
@@ -311,7 +311,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin> -->
 
                 <!-- Compiler plugin enforces Java 1.8 compatibility and activates
               annotation processors -->

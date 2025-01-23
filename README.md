@@ -94,6 +94,22 @@ Where the final argument is the IP address of the server machine.
 
 > Make sure you have the dependencies installed first `pip install -r dependencies.txt`
 
+### Coverage Reports
+
+To run the coverage script
+
+For Ticket Monster Monolith
+
+```
+./scripts/coverage.sh --scenario=all --application_name=ticketmonster --architecture=monolith --server_url="http://localhost:8080/ticket-monster"
+```
+
+For Ticket Monster MS
+
+```
+./scripts/coverage.sh --scenario=all --application_name=ticketmonster --architecture=microservice --server_url="http://localhost:5000"
+```
+
 # UML Sequence Diagrams For each scenario
 
 ## Scenario 1

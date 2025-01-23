@@ -24,17 +24,17 @@ application_dir_path="${PROJECT_DIR}/${2#*=}"
 if [[ "$1" == "--all" ]]; then
   # Execute monolithic setup using docker-compose.yml
   echo "Setting up both monolith and microservice systems..."
-  docker-compose -f "$application_dir_path/docker-compose.yml" up -d --remove-orphans
+  docker-compose -f "$application_dir_path/docker-compose.yml" up -d --remove-orphans --build
 
   echo "Setup complete"
 elif [[ "$1" == "--monolith" ]]; then
   # Execute monolithic setup using monolith-compose.yml
   echo "Running monolithic setup..."
-  docker-compose -f "$application_dir_path/monolith-compose.yml" up -d --remove-orphans
+  docker-compose -f "$application_dir_path/monolith-compose.yml" up -d --remove-orphans --build
 elif [[ "$1" == "--microservice" ]]; then
   # Execute microservice setup using microservice-compose.yml
   echo "Running microservice setup..."
-  docker-compose -f "$application_dir_path/microservice-compose.yml" up -d --remove-orphans
+  docker-compose -f "$application_dir_path/microservice-compose.yml" up -d --remove-orphans --build
 else
   # Invalid or no flag provided
    echo "Invalid flag or no flag provided. Usage: ./startup.sh [--monolith | --microservice] --application_dir_path=<path>"
