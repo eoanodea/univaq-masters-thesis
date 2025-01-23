@@ -43,6 +43,8 @@ RUN echo 'JAVA_OPTS="$JAVA_OPTS -javaagent:/jacocoagent.jar=destfile=/jacoco.exe
 
 EXPOSE 8080 6300
 
+RUN cp -r /build /data/build
+
 CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]
 
 # CMD ["/start.sh"]

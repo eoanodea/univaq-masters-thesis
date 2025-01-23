@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Bot.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.service</a> &gt; <span class="el_source">Bot.java</span></div><h1>Bot.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.service;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
+import javax.ejb.Stateless;
+import javax.ejb.Timeout;
+import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.Response;
+
+import org.jboss.examples.ticketmonster.model.Performance;
+import org.jboss.examples.ticketmonster.model.Show;
+import org.jboss.examples.ticketmonster.model.TicketPrice;
+import org.jboss.examples.ticketmonster.rest.*;
+import org.jboss.examples.ticketmonster.util.qualifier.BotMessage;
+
+@Stateless
+<span class="nc" id="L29">public class Bot {</span>
+    
+<span class="fc" id="L31">    private static final Random random = new Random(System.nanoTime());</span>
+    
+    /** Frequency with which the bot will book **/
+<span class="fc" id="L34">    public static final long DURATION = TimeUnit.SECONDS.toMillis(3);</span>
+    
+    /** Maximum number of ticket requests that will be filed **/
+<span class="fc" id="L37">    public static int MAX_TICKET_REQUESTS = 100;</span>
+    
+    /** Maximum number of tickets per request **/
+<span class="fc" id="L40">    public static int MAX_TICKETS_PER_REQUEST = 100;</span>
+    
+<span class="fc" id="L42">    public static String [] BOOKERS = {&quot;anne@acme.com&quot;, &quot;george@acme.com&quot;, &quot;william@acme.com&quot;, &quot;victoria@acme.com&quot;, &quot;edward@acme.com&quot;, &quot;elizabeth@acme.com&quot;, &quot;mary@acme.com&quot;, &quot;charles@acme.com&quot;, &quot;james@acme.com&quot;, &quot;henry@acme.com&quot;, &quot;richard@acme.com&quot;, &quot;john@acme.com&quot;, &quot;stephen@acme.com&quot;}; </span>
+
+    @Inject 
+    private ShowService showService;
+    
+    @Inject
+    private BookingService bookingService;
+    
+    @Inject @BotMessage
+    Event&lt;String&gt; event;
+    
+    @Resource
+    private TimerService timerService;
+    
+    public Timer start() {
+<span class="nc" id="L57">        String startMessage = new StringBuilder(&quot;==========================\n&quot;)</span>
+<span class="nc" id="L58">                .append(&quot;Bot started at &quot;).append(new Date().toString()).append(&quot;\n&quot;)</span>
+<span class="nc" id="L59">                .toString();</span>
+<span class="nc" id="L60">        event.fire(startMessage);</span>
+<span class="nc" id="L61">        return timerService.createIntervalTimer(0, DURATION, new TimerConfig(null, false));</span>
+    }
+    
+    public void stop(Timer timer) {
+<span class="nc" id="L65">        String stopMessage = new StringBuilder(&quot;==========================\n&quot;)</span>
+<span class="nc" id="L66">                .append(&quot;Bot stopped at &quot;).append(new Date().toString()).append(&quot;\n&quot;)</span>
+<span class="nc" id="L67">                .toString();</span>
+<span class="nc" id="L68">        event.fire(stopMessage);</span>
+<span class="nc" id="L69">        timer.cancel();</span>
+<span class="nc" id="L70">    }</span>
+    
+    @Timeout
+    public void book(Timer timer) {
+        // Select a show at random
+<span class="nc" id="L75">        Show show = selectAtRandom(showService.getAll(new MultivaluedHashMap&lt;String, String&gt;()));</span>
+
+        // Select a performance at random
+<span class="nc" id="L78">        Performance performance = selectAtRandom(show.getPerformances());</span>
+        
+<span class="nc" id="L80">        String requestor = selectAtRandom(BOOKERS);</span>
+
+<span class="nc" id="L82">        BookingRequest bookingRequest = new BookingRequest(performance, requestor);</span>
+
+<span class="nc" id="L84">        List&lt;TicketPrice&gt; possibleTicketPrices = new ArrayList&lt;TicketPrice&gt;(show.getTicketPrices());</span>
+        
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        List&lt;Integer&gt; indicies = selectAtRandom(MAX_TICKET_REQUESTS &lt; possibleTicketPrices.size() ? MAX_TICKET_REQUESTS : possibleTicketPrices.size());</span>
+        
+<span class="nc" id="L88">        StringBuilder message = new StringBuilder(&quot;==========================\n&quot;)</span>
+<span class="nc" id="L89">        .append(&quot;Booking by &quot;)</span>
+<span class="nc" id="L90">        .append(requestor)</span>
+<span class="nc" id="L91">        .append(&quot; at &quot;)</span>
+<span class="nc" id="L92">        .append(new Date().toString())</span>
+<span class="nc" id="L93">        .append(&quot;\n&quot;)</span>
+<span class="nc" id="L94">        .append(performance)</span>
+<span class="nc" id="L95">        .append(&quot;\n&quot;)</span>
+<span class="nc" id="L96">        .append(&quot;~~~~~~~~~~~~~~~~~~~~~~~~~\n&quot;);</span>
+        
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        for (int index : indicies) {</span>
+<span class="nc" id="L99">            int no = random.nextInt(MAX_TICKETS_PER_REQUEST);</span>
+<span class="nc" id="L100">            TicketPrice price = possibleTicketPrices.get(index);  </span>
+<span class="nc" id="L101">            bookingRequest.addTicketRequest(new TicketRequest(price, no));</span>
+<span class="nc" id="L102">            message</span>
+<span class="nc" id="L103">                .append(no)</span>
+<span class="nc" id="L104">                .append(&quot; of &quot;)</span>
+<span class="nc" id="L105">                .append(price.getSection())</span>
+<span class="nc" id="L106">                .append(&quot;\n&quot;);</span>
+            
+<span class="nc" id="L108">        }</span>
+<span class="nc" id="L109">        Response response = bookingService.createBooking(bookingRequest);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if(response.getStatus() == Response.Status.OK.getStatusCode()) {</span>
+<span class="nc" id="L111">            message.append(&quot;SUCCESSFUL\n&quot;)</span>
+<span class="nc" id="L112">                    .append(&quot;~~~~~~~~~~~~~~~~~~~~~~~~~\n&quot;);</span>
+        }
+        else {
+<span class="nc" id="L115">            message.append(&quot;FAILED:\n&quot;)</span>
+<span class="nc" id="L116">                        .append(((Map&lt;String, Object&gt;) response.getEntity()).get(&quot;errors&quot;))</span>
+<span class="nc" id="L117">                        .append(&quot;~~~~~~~~~~~~~~~~~~~~~~~~~\n&quot;);</span>
+        }
+<span class="nc" id="L119">        event.fire(message.toString());</span>
+<span class="nc" id="L120">    }</span>
+    
+    
+    
+    private &lt;T&gt; T selectAtRandom(List&lt;T&gt; list) {
+<span class="nc" id="L125">        int i = random.nextInt(list.size());</span>
+<span class="nc" id="L126">        return list.get(i);</span>
+    }
+    
+    private &lt;T&gt; T selectAtRandom(T[] array) {
+<span class="nc" id="L130">        int i = random.nextInt(array.length);</span>
+<span class="nc" id="L131">        return array[i];</span>
+    }
+    
+    private &lt;T&gt; T selectAtRandom(Collection&lt;T&gt; collection) {
+<span class="nc" id="L135">        int item = random.nextInt(collection.size());</span>
+<span class="nc" id="L136">        int i = 0;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        for(T obj : collection)</span>
+        {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            if (i == item)</span>
+<span class="nc" id="L140">                return obj;</span>
+<span class="nc" id="L141">            i++;</span>
+<span class="nc" id="L142">        }</span>
+<span class="nc" id="L143">        throw new IllegalStateException();</span>
+    }
+    
+    private List&lt;Integer&gt; selectAtRandom(int max) {
+<span class="nc" id="L147">        List&lt;Integer&gt; indicies = new ArrayList&lt;Integer&gt;();</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        for (int i = 0; i &lt; max;) {</span>
+<span class="nc" id="L149">            int r = random.nextInt(max);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            if (!indicies.contains(r)) {</span>
+<span class="nc" id="L151">                indicies.add(r);</span>
+<span class="nc" id="L152">                i++;</span>
+            }
+<span class="nc" id="L154">        }</span>
+<span class="nc" id="L155">        return indicies;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

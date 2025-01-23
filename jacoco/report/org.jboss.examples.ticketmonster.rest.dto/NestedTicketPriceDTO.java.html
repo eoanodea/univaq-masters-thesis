@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NestedTicketPriceDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.rest.dto</a> &gt; <span class="el_source">NestedTicketPriceDTO.java</span></div><h1>NestedTicketPriceDTO.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.rest.dto;
+
+import java.io.Serializable;
+import org.jboss.examples.ticketmonster.model.TicketPrice;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+
+public class NestedTicketPriceDTO implements Serializable
+{
+
+   private Long id;
+   private float price;
+   private String displayTitle;
+
+<span class="nc" id="L15">   public NestedTicketPriceDTO()</span>
+   {
+<span class="nc" id="L17">   }</span>
+
+<span class="nc" id="L19">   public NestedTicketPriceDTO(final TicketPrice entity)</span>
+   {
+<span class="nc bnc" id="L21" title="All 2 branches missed.">      if (entity != null)</span>
+      {
+<span class="nc" id="L23">         this.id = entity.getId();</span>
+<span class="nc" id="L24">         this.price = entity.getPrice();</span>
+<span class="nc" id="L25">         this.displayTitle = entity.toString();</span>
+      }
+<span class="nc" id="L27">   }</span>
+
+   public TicketPrice fromDTO(TicketPrice entity, EntityManager em)
+   {
+<span class="nc bnc" id="L31" title="All 2 branches missed.">      if (entity == null)</span>
+      {
+<span class="nc" id="L33">         entity = new TicketPrice();</span>
+      }
+<span class="nc bnc" id="L35" title="All 2 branches missed.">      if (this.id != null)</span>
+      {
+<span class="nc" id="L37">         TypedQuery&lt;TicketPrice&gt; findByIdQuery = em</span>
+<span class="nc" id="L38">               .createQuery(</span>
+<span class="nc" id="L39">                     &quot;SELECT DISTINCT t FROM TicketPrice t WHERE t.id = :entityId&quot;,</span>
+<span class="nc" id="L40">                     TicketPrice.class);</span>
+<span class="nc" id="L41">         findByIdQuery.setParameter(&quot;entityId&quot;, this.id);</span>
+         try
+         {
+<span class="nc" id="L44">            entity = findByIdQuery.getSingleResult();</span>
+<span class="nc" id="L45">         }</span>
+<span class="nc" id="L46">         catch (javax.persistence.NoResultException nre)</span>
+         {
+<span class="nc" id="L48">            entity = null;</span>
+         }
+<span class="nc" id="L50">         return entity;</span>
+      }
+<span class="nc" id="L52">      entity.setPrice(this.price);</span>
+<span class="nc" id="L53">      entity = em.merge(entity);</span>
+<span class="nc" id="L54">      return entity;</span>
+   }
+
+   public Long getId()
+   {
+<span class="nc" id="L59">      return this.id;</span>
+   }
+
+   public void setId(final Long id)
+   {
+<span class="nc" id="L64">      this.id = id;</span>
+<span class="nc" id="L65">   }</span>
+
+   public float getPrice()
+   {
+<span class="nc" id="L69">      return this.price;</span>
+   }
+
+   public void setPrice(final float price)
+   {
+<span class="nc" id="L74">      this.price = price;</span>
+<span class="nc" id="L75">   }</span>
+
+   public String getDisplayTitle()
+   {
+<span class="nc" id="L79">      return this.displayTitle;</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MediaType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.model</a> &gt; <span class="el_source">MediaType.java</span></div><h1>MediaType.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.model;
+
+
+/**
+ * &lt;p&gt;
+ * The {@link MediaType} describes the types of media this application can handle and render.
+ * 
+ * &lt;p&gt;
+ * The media type is a &lt;em&gt;closed set&lt;/em&gt; - as each different type of media requires support coded into the view layers, it
+ * cannot be expanded upon without rebuilding the application. It is therefore represented by an enumeration. When used, you
+ * should instruct JPA to store the enum value using it's String representation, so that we can later reorder the enum members,
+ * without changing the data. Of course, this does mean we can't change the names of media items once the app is put into
+ * production. To do this add &lt;code&gt;@Enumerated(STRING)&lt;/code&gt; to the field declaration.
+ * &lt;/p&gt;
+ * 
+ * &lt;p&gt;
+ * The {@link MediaType} also describes whether this type of media can be cached locally, and used when there is no internet
+ * connection. For example images and or an mpeg video file can be cached, whilst a video streamed across the internet cannot.
+ * &lt;/p&gt;
+ * 
+ * @author Pete Muir
+ * 
+ */
+<span class="nc" id="L24">public enum MediaType {</span>
+
+<span class="nc" id="L26">    /**</span>
+     * The types of media the application can currently handle. Right now, it can only handle images. We plan to add support for
+     * streamed videos in the next development round.
+     */
+<span class="nc" id="L30">    IMAGE(&quot;Image&quot;, true);</span>
+    
+    /**
+     * A human readable description of the media type.
+     */
+    private final String description;
+    
+    /**
+     * A boolean flag indicating whether the media type can be cached.
+     */
+    private final boolean cacheable;
+    
+    /* Boilerplate constructor and getters */
+
+<span class="nc" id="L44">    private MediaType(String description, boolean cacheable) {</span>
+<span class="nc" id="L45">        this.description = description;</span>
+<span class="nc" id="L46">        this.cacheable = cacheable;</span>
+<span class="nc" id="L47">    }</span>
+
+    public String getDescription() {
+<span class="nc" id="L50">        return description;</span>
+    }
+
+    public boolean isCacheable() {
+<span class="nc" id="L54">        return cacheable;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
