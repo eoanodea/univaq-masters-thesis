@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookingService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice Scenario 3</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.rest</a> &gt; <span class="el_source">BookingService.java</span></div><h1>BookingService.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.rest;
+
+import org.ff4j.FF4j;
+import org.jboss.examples.ticketmonster.model.*;
+import org.jboss.examples.ticketmonster.orders.OrdersRequestDTO;
+import org.jboss.examples.ticketmonster.service.AllocatedSeats;
+import org.jboss.examples.ticketmonster.service.SeatAllocationService;
+import org.jboss.examples.ticketmonster.util.qualifier.Cancelled;
+import org.jboss.examples.ticketmonster.util.qualifier.Created;
+import org.jboss.resteasy.client.jaxrs.ResteasyClient;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+
+import javax.ejb.Stateless;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.ws.rs.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.Response;
+import java.util.*;
+
+/**
+ * &lt;p&gt;
+ *     A JAX-RS endpoint for handling {@link Booking}s. Inherits the GET
+ *     methods from {@link BaseEntityService}, and implements additional REST methods.
+ * &lt;/p&gt;
+ *
+ * @author Marius Bogoevici
+ * @author Pete Muir
+ */
+@Path(&quot;/bookings&quot;)
+/**
+ * &lt;p&gt;
+ *     This is a stateless service, we declare it as an EJB for transaction demarcation
+ * &lt;/p&gt;
+ */
+@Stateless
+public class BookingService extends BaseEntityService&lt;Booking&gt; {
+
+    @Inject
+    SeatAllocationService seatAllocationService;
+
+    @Inject
+    FF4j ff;
+
+    @Inject @Cancelled
+    private Event&lt;Booking&gt; cancelledBookingEvent;
+
+    @Inject @Created
+    private Event&lt;Booking&gt; newBookingEvent;
+
+<span class="nc" id="L57">    private String ordersServiceUri = &quot;http://localhost:9090/rest/bookings&quot;;</span>
+    
+    public BookingService() {
+<span class="nc" id="L60">        super(Booking.class);</span>
+<span class="nc" id="L61">    }</span>
+    
+    @DELETE
+    public Response deleteAllBookings() {
+<span class="nc" id="L65">    	List&lt;Booking&gt; bookings = getAll(new MultivaluedHashMap&lt;String, String&gt;());</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">    	for (Booking booking : bookings) {</span>
+<span class="nc" id="L67">    		deleteBooking(booking.getId());</span>
+<span class="nc" id="L68">    	}</span>
+<span class="nc" id="L69">        return Response.noContent().build();</span>
+    }
+
+    /**
+     * &lt;p&gt;
+     * Delete a booking by id
+     * &lt;/p&gt;
+     * @param id
+     * @return
+     */
+    @DELETE
+    @Path(&quot;/{id:[0-9][0-9]*}&quot;)
+    public Response deleteBooking(@PathParam(&quot;id&quot;) Long id) {
+<span class="nc" id="L82">        Booking booking = getEntityManager().find(Booking.class, id);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (booking == null) {</span>
+<span class="nc" id="L84">            return Response.status(Response.Status.NOT_FOUND).build();</span>
+        }
+<span class="nc" id="L86">        getEntityManager().remove(booking);</span>
+        // Group together seats by section so that we can deallocate them in a group
+<span class="nc" id="L88">        Map&lt;Section, List&lt;Seat&gt;&gt; seatsBySection = new TreeMap&lt;Section, java.util.List&lt;Seat&gt;&gt;(SectionComparator.instance());</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        for (Ticket ticket : booking.getTickets()) {</span>
+<span class="nc" id="L90">            List&lt;Seat&gt; seats = seatsBySection.get(ticket.getSeat().getSection());</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">            if (seats == null) {</span>
+<span class="nc" id="L92">                seats = new ArrayList&lt;Seat&gt;();</span>
+<span class="nc" id="L93">                seatsBySection.put(ticket.getSeat().getSection(), seats);</span>
+            }
+<span class="nc" id="L95">            seats.add(ticket.getSeat());</span>
+<span class="nc" id="L96">        }</span>
+        // Deallocate each section block
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        for (Map.Entry&lt;Section, List&lt;Seat&gt;&gt; sectionListEntry : seatsBySection.entrySet()) {</span>
+<span class="nc" id="L99">            seatAllocationService.deallocateSeats( sectionListEntry.getKey(),</span>
+<span class="nc" id="L100">                    booking.getPerformance(), sectionListEntry.getValue());</span>
+<span class="nc" id="L101">        }</span>
+<span class="nc" id="L102">        cancelledBookingEvent.fire(booking);</span>
+<span class="nc" id="L103">        return Response.noContent().build();</span>
+    }
+
+    /**
+     * &lt;p&gt;
+     *   Create a booking. Data is contained in the bookingRequest object
+     * &lt;/p&gt;
+     * @param bookingRequest
+     * @return
+     */
+    @POST
+    /**
+     * &lt;p&gt; Data is received in JSON format. For easy handling, it will be unmarshalled in the support
+     * {@link BookingRequest} class.
+     */
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createBooking(BookingRequest bookingRequest) {
+<span class="nc" id="L120">        Response response = null;</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (ff.check(&quot;orders-internal&quot;)) {</span>
+<span class="nc" id="L123">            System.out.println(&quot;Creating internal booking&quot;);</span>
+<span class="nc" id="L124">            response = createBookingInternal(bookingRequest);</span>
+        }
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (ff.check(&quot;orders-service&quot;)) {</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            if (ff.check(&quot;orders-internal&quot;)) {</span>
+<span class="nc" id="L129">                createSyntheticBookingOrdersService(bookingRequest);</span>
+
+            }
+            else {
+<span class="nc" id="L133">                response = createBookingOrdersService(bookingRequest);</span>
+            }
+        }
+
+<span class="nc" id="L137">        return response;</span>
+    }
+
+    /**
+     * Makes a call to the Orders Service, but lets it know that this is a synthetic transaction
+     * that has already been recorded (ie, here internally) and is sent just for exercising the orders
+     * service; it should roll back or clean up and not store this tx as a real tx
+     *
+     * @param bookingRequest
+     */
+    private void createSyntheticBookingOrdersService(BookingRequest bookingRequest) {
+<span class="nc" id="L148">        System.out.println(&quot;Calling Orders Service with SYNTHETIC TX&quot;);</span>
+<span class="nc" id="L149">        OrdersRequestDTO ordersRequest = new OrdersRequestDTO(bookingRequest, true);</span>
+
+        try {
+<span class="nc" id="L152">            System.out.println(&quot;Calling service: &quot; + ordersServiceUri);</span>
+<span class="nc" id="L153">            Response response = buildClient()</span>
+<span class="nc" id="L154">                    .target(ordersServiceUri)</span>
+<span class="nc" id="L155">                    .request().post(Entity.entity(ordersRequest, MediaType.APPLICATION_JSON_TYPE));</span>
+<span class="nc" id="L156">            String sytheticResponse = response.readEntity(String.class);</span>
+<span class="nc" id="L157">            System.out.println(&quot;Response from SYNTHETIC TX: &quot; + sytheticResponse);</span>
+
+<span class="nc" id="L159">        } catch (Exception e) {</span>
+<span class="nc" id="L160">            System.out.println(&quot;Caught an exception here: &quot;+ e.getMessage());</span>
+<span class="nc" id="L161">            throw new RuntimeException(e);</span>
+<span class="nc" id="L162">        }</span>
+<span class="nc" id="L163">    }</span>
+
+    private Client buildClient() {
+<span class="nc" id="L166">        String proxyHost = System.getProperty(&quot;http.proxyHost&quot;);</span>
+        Integer proxyPort;
+        try {
+<span class="nc" id="L169">            proxyPort = Integer.parseInt(System.getProperty(&quot;http.proxyPort&quot;));</span>
+<span class="nc" id="L170">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L171">            proxyPort = null;</span>
+<span class="nc" id="L172">        }</span>
+
+<span class="nc bnc" id="L174" title="All 6 branches missed.">        if (proxyHost != null &amp;&amp; !proxyHost.isEmpty() &amp;&amp; proxyPort != null) {</span>
+<span class="nc" id="L175">            System.out.println(&quot;Using proxy: &quot; + proxyHost + &quot;:&quot; + proxyPort);</span>
+<span class="nc" id="L176">            return new ResteasyClientBuilder()</span>
+<span class="nc" id="L177">                    .defaultProxy(proxyHost, proxyPort).build();</span>
+        }else {
+<span class="nc" id="L179">            return ClientBuilder.newClient();</span>
+        }
+
+    }
+
+    /**
+     * This method delegates the booking creation to the Orders Service
+     * @param bookingRequest
+     * @return
+     */
+    private Response createBookingOrdersService(BookingRequest bookingRequest) {
+<span class="nc" id="L190">        System.out.println(&quot;Real World orders service&quot;);</span>
+<span class="nc" id="L191">        return null;</span>
+    }
+
+    /**
+     * This is the original implementation of creating a booking; relies on internal logic
+     *
+     * @param bookingRequest
+     * @return
+     */
+    private Response createBookingInternal(BookingRequest bookingRequest) {
+        try {
+            // identify the ticket price categories in this request
+<span class="nc" id="L203">            Set&lt;Long&gt; priceCategoryIds = bookingRequest.getUniquePriceCategoryIds();</span>
+
+            // load the entities that make up this booking's relationships
+<span class="nc" id="L206">            Performance performance = getEntityManager().find(Performance.class, bookingRequest.getPerformance());</span>
+
+            // As we can have a mix of ticket types in a booking, we need to load all of them that are relevant,
+            // id
+<span class="nc" id="L210">            Map&lt;Long, TicketPrice&gt; ticketPricesById = loadTicketPrices(priceCategoryIds);</span>
+
+            // Now, start to create the booking from the posted data
+            // Set the simple stuff first!
+<span class="nc" id="L214">            Booking booking = new Booking();</span>
+<span class="nc" id="L215">            booking.setContactEmail(bookingRequest.getEmail());</span>
+<span class="nc" id="L216">            booking.setPerformance(performance);</span>
+<span class="nc" id="L217">            booking.setCancellationCode(&quot;abc&quot;);</span>
+
+            // Now, we iterate over each ticket that was requested, and organize them by section and category
+            // we want to allocate ticket requests that belong to the same section contiguously
+<span class="nc" id="L221">            Map&lt;Section, Map&lt;TicketCategory, TicketRequest&gt;&gt; ticketRequestsPerSection</span>
+<span class="nc" id="L222">                    = new TreeMap&lt;Section, Map&lt;TicketCategory, TicketRequest&gt;&gt;(SectionComparator.instance());</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">            for (TicketRequest ticketRequest : bookingRequest.getTicketRequests()) {</span>
+<span class="nc" id="L224">                final TicketPrice ticketPrice = ticketPricesById.get(ticketRequest.getTicketPrice());</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">                if (!ticketRequestsPerSection.containsKey(ticketPrice.getSection())) {</span>
+<span class="nc" id="L226">                    ticketRequestsPerSection</span>
+<span class="nc" id="L227">                            .put(ticketPrice.getSection(), new HashMap&lt;TicketCategory, TicketRequest&gt;());</span>
+                }
+<span class="nc" id="L229">                ticketRequestsPerSection.get(ticketPrice.getSection()).put(</span>
+<span class="nc" id="L230">                        ticketPricesById.get(ticketRequest.getTicketPrice()).getTicketCategory(), ticketRequest);</span>
+<span class="nc" id="L231">            }</span>
+
+            // Now, we can allocate the tickets
+            // Iterate over the sections, finding the candidate seats for allocation
+            // The process will lock the record for a given
+            // Use deterministic ordering to prevent deadlocks
+<span class="nc" id="L237">            Map&lt;Section, AllocatedSeats&gt; seatsPerSection = new TreeMap&lt;Section, AllocatedSeats&gt;(SectionComparator.instance());</span>
+<span class="nc" id="L238">            List&lt;Section&gt; failedSections = new ArrayList&lt;Section&gt;();</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">            for (Section section : ticketRequestsPerSection.keySet()) {</span>
+<span class="nc" id="L240">                int totalTicketsRequestedPerSection = 0;</span>
+                // Compute the total number of tickets required (a ticket category doesn't impact the actual seat!)
+<span class="nc" id="L242">                final Map&lt;TicketCategory, TicketRequest&gt; ticketRequestsByCategories = ticketRequestsPerSection.get(section);</span>
+                // calculate the total quantity of tickets to be allocated in this section
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                for (TicketRequest ticketRequest : ticketRequestsByCategories.values()) {</span>
+<span class="nc" id="L245">                    totalTicketsRequestedPerSection += ticketRequest.getQuantity();</span>
+<span class="nc" id="L246">                }</span>
+                // try to allocate seats
+
+<span class="nc" id="L249">                AllocatedSeats allocatedSeats = seatAllocationService.allocateSeats(section, performance, totalTicketsRequestedPerSection, true);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">                if (allocatedSeats.getSeats().size() == totalTicketsRequestedPerSection) {</span>
+<span class="nc" id="L251">                    seatsPerSection.put(section, allocatedSeats);</span>
+                } else {
+<span class="nc" id="L253">                    failedSections.add(section);</span>
+                }
+<span class="nc" id="L255">            }</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">            if (failedSections.isEmpty()) {</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">                for (Section section : seatsPerSection.keySet()) {</span>
+                    // allocation was successful, begin generating tickets
+                    // associate each allocated seat with a ticket, assigning a price category to it
+<span class="nc" id="L260">                    final Map&lt;TicketCategory, TicketRequest&gt; ticketRequestsByCategories = ticketRequestsPerSection.get(section);</span>
+<span class="nc" id="L261">                    AllocatedSeats allocatedSeats = seatsPerSection.get(section);</span>
+<span class="nc" id="L262">                    allocatedSeats.markOccupied();</span>
+<span class="nc" id="L263">                    int seatCounter = 0;</span>
+                    // Now, add a ticket for each requested ticket to the booking
+<span class="nc bnc" id="L265" title="All 2 branches missed.">                    for (TicketCategory ticketCategory : ticketRequestsByCategories.keySet()) {</span>
+<span class="nc" id="L266">                        final TicketRequest ticketRequest = ticketRequestsByCategories.get(ticketCategory);</span>
+<span class="nc" id="L267">                        final TicketPrice ticketPrice = ticketPricesById.get(ticketRequest.getTicketPrice());</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">                        for (int i = 0; i &lt; ticketRequest.getQuantity(); i++) {</span>
+<span class="nc" id="L269">                            Ticket ticket = new Ticket(allocatedSeats.getSeats().get(seatCounter + i), ticketCategory, ticketPrice.getPrice());</span>
+                            // getEntityManager().persist(ticket);
+<span class="nc" id="L271">                            booking.getTickets().add(ticket);</span>
+                        }
+<span class="nc" id="L273">                        seatCounter += ticketRequest.getQuantity();</span>
+<span class="nc" id="L274">                    }</span>
+<span class="nc" id="L275">                }</span>
+                // Persist the booking, including cascaded relationships
+<span class="nc" id="L277">                booking.setPerformance(performance);</span>
+<span class="nc" id="L278">                booking.setCancellationCode(&quot;abc&quot;);</span>
+<span class="nc" id="L279">                getEntityManager().persist(booking);</span>
+<span class="nc" id="L280">                newBookingEvent.fire(booking);</span>
+<span class="nc" id="L281">                return Response.ok().entity(booking).type(MediaType.APPLICATION_JSON_TYPE).build();</span>
+            } else {
+<span class="nc" id="L283">                Map&lt;String, Object&gt; responseEntity = new HashMap&lt;String, Object&gt;();</span>
+<span class="nc" id="L284">                responseEntity.put(&quot;errors&quot;, Collections.singletonList(&quot;Cannot allocate the requested number of seats!&quot;));</span>
+<span class="nc" id="L285">                return Response.status(Response.Status.BAD_REQUEST).entity(responseEntity).build();</span>
+            }
+<span class="nc" id="L287">        } catch (ConstraintViolationException e) {</span>
+            // If validation of the data failed using Bean Validation, then send an error
+<span class="nc" id="L289">            Map&lt;String, Object&gt; errors = new HashMap&lt;String, Object&gt;();</span>
+<span class="nc" id="L290">            List&lt;String&gt; errorMessages = new ArrayList&lt;String&gt;();</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">            for (ConstraintViolation&lt;?&gt; constraintViolation : e.getConstraintViolations()) {</span>
+<span class="nc" id="L292">                errorMessages.add(constraintViolation.getMessage());</span>
+<span class="nc" id="L293">            }</span>
+<span class="nc" id="L294">            errors.put(&quot;errors&quot;, errorMessages);</span>
+            // A WebApplicationException can wrap a response
+            // Throwing the exception causes an automatic rollback
+<span class="nc" id="L297">            throw new RestServiceException(Response.status(Response.Status.BAD_REQUEST).entity(errors).build());</span>
+<span class="nc" id="L298">        } catch (Exception e) {</span>
+            // Finally, handle unexpected exceptions
+<span class="nc" id="L300">            Map&lt;String, Object&gt; errors = new HashMap&lt;String, Object&gt;();</span>
+<span class="nc" id="L301">            errors.put(&quot;errors&quot;, Collections.singletonList(e.getMessage()));</span>
+            // A WebApplicationException can wrap a response
+            // Throwing the exception causes an automatic rollback
+<span class="nc" id="L304">            throw new RestServiceException(Response.status(Response.Status.BAD_REQUEST).entity(errors).build());</span>
+        }
+    }
+
+    /**
+     * Utility method for loading ticket prices
+     * @param priceCategoryIds
+     * @return
+     */
+    private Map&lt;Long, TicketPrice&gt; loadTicketPrices(Set&lt;Long&gt; priceCategoryIds) {
+<span class="nc" id="L314">        List&lt;TicketPrice&gt; ticketPrices = (List&lt;TicketPrice&gt;) getEntityManager()</span>
+<span class="nc" id="L315">                .createQuery(&quot;select p from TicketPrice p where p.id in :ids&quot;, TicketPrice.class)</span>
+<span class="nc" id="L316">                .setParameter(&quot;ids&quot;, priceCategoryIds).getResultList();</span>
+        // Now, map them by id
+<span class="nc" id="L318">        Map&lt;Long, TicketPrice&gt; ticketPricesById = new HashMap&lt;Long, TicketPrice&gt;();</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">        for (TicketPrice ticketPrice : ticketPrices) {</span>
+<span class="nc" id="L320">            ticketPricesById.put(ticketPrice.getId(), ticketPrice);</span>
+<span class="nc" id="L321">        }</span>
+<span class="nc" id="L322">        return ticketPricesById;</span>
+    }
+
+    public String getOrdersServiceUri() {
+<span class="nc" id="L326">        return ordersServiceUri;</span>
+    }
+
+    public void setOrdersServiceUri(String ordersServiceUri) {
+<span class="nc" id="L330">        this.ordersServiceUri = ordersServiceUri;</span>
+<span class="nc" id="L331">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

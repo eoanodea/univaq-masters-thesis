@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestServiceException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice All Scenarios</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.rest</a> &gt; <span class="el_source">RestServiceException.java</span></div><h1>RestServiceException.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.rest;
+
+import javax.ejb.ApplicationException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
+/**
+ * &lt;p&gt;
+ * This exception is thrown by RESTful services. As a subclass of {@link WebApplicationException},
+ * it is translated automatically into a {@link Response}.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * We mark it as {@link ApplicationException} because it is part of the application logic. Also,
+ * we want the container to roll back automatically when it is thrown.
+ * &lt;/p&gt;
+ * @author Marius Bogoevici
+ */
+@ApplicationException(inherited = true, rollback = true)
+public class RestServiceException extends WebApplicationException {
+
+<span class="nc" id="L21">    public RestServiceException() {</span>
+<span class="nc" id="L22">    }</span>
+
+    public RestServiceException(Response response) {
+<span class="nc" id="L25">        super(response);</span>
+<span class="nc" id="L26">    }</span>
+
+    public RestServiceException(int status) {
+<span class="nc" id="L29">        super(status);</span>
+<span class="nc" id="L30">    }</span>
+
+    public RestServiceException(Response.Status status) {
+<span class="nc" id="L33">        super(status);</span>
+<span class="nc" id="L34">    }</span>
+
+    public RestServiceException(Throwable cause) {
+<span class="nc" id="L37">        super(cause);</span>
+<span class="nc" id="L38">    }</span>
+
+    public RestServiceException(Throwable cause, Response response) {
+<span class="nc" id="L41">        super(cause, response);</span>
+<span class="nc" id="L42">    }</span>
+
+    public RestServiceException(Throwable cause, int status) {
+<span class="nc" id="L45">        super(cause, status);</span>
+<span class="nc" id="L46">    }</span>
+
+    public RestServiceException(Throwable cause, Response.Status status) {
+<span class="nc" id="L49">        super(cause, status);</span>
+<span class="nc" id="L50">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

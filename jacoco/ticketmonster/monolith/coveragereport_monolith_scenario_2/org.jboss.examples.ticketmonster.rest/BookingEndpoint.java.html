@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookingEndpoint.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report monolith Scenario 2</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.rest</a> &gt; <span class="el_source">BookingEndpoint.java</span></div><h1>BookingEndpoint.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.rest;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
+import org.jboss.examples.ticketmonster.rest.dto.BookingDTO;
+import org.jboss.examples.ticketmonster.model.Booking;
+
+/**
+ * 
+ */
+@Stateless
+@Path(&quot;forge/bookings&quot;)
+<span class="nc" id="L32">public class BookingEndpoint</span>
+{
+   @PersistenceContext(unitName = &quot;primary&quot;)
+   private EntityManager em;
+
+   @POST
+   @Consumes(&quot;application/json&quot;)
+   public Response create(BookingDTO dto)
+   {
+<span class="nc" id="L41">      Booking entity = dto.fromDTO(null, em);</span>
+<span class="nc" id="L42">      em.persist(entity);</span>
+<span class="nc" id="L43">      return Response.created(UriBuilder.fromResource(BookingEndpoint.class).path(String.valueOf(entity.getId())).build()).build();</span>
+   }
+
+   @DELETE
+   @Path(&quot;/{id:[0-9][0-9]*}&quot;)
+   public Response deleteById(@PathParam(&quot;id&quot;) Long id)
+   {
+<span class="nc" id="L50">      Booking entity = em.find(Booking.class, id);</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">      if (entity == null)</span>
+      {
+<span class="nc" id="L53">         return Response.status(Status.NOT_FOUND).build();</span>
+      }
+<span class="nc" id="L55">      em.remove(entity);</span>
+<span class="nc" id="L56">      return Response.noContent().build();</span>
+   }
+
+   @GET
+   @Path(&quot;/{id:[0-9][0-9]*}&quot;)
+   @Produces(&quot;application/json&quot;)
+   public Response findById(@PathParam(&quot;id&quot;) Long id)
+   {
+<span class="nc" id="L64">      TypedQuery&lt;Booking&gt; findByIdQuery = em.createQuery(&quot;SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.tickets LEFT JOIN FETCH b.performance WHERE b.id = :entityId ORDER BY b.id&quot;, Booking.class);</span>
+<span class="nc" id="L65">      findByIdQuery.setParameter(&quot;entityId&quot;, id);</span>
+      Booking entity;
+      try
+      {
+<span class="nc" id="L69">         entity = findByIdQuery.getSingleResult();</span>
+      }
+<span class="nc" id="L71">      catch (NoResultException nre)</span>
+      {
+<span class="nc" id="L73">         entity = null;</span>
+<span class="nc" id="L74">      }</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">      if (entity == null)</span>
+      {
+<span class="nc" id="L77">         return Response.status(Status.NOT_FOUND).build();</span>
+      }
+<span class="nc" id="L79">      BookingDTO dto = new BookingDTO(entity);</span>
+<span class="nc" id="L80">      return Response.ok(dto).build();</span>
+   }
+
+   @GET
+   @Produces(&quot;application/json&quot;)
+   public List&lt;BookingDTO&gt; listAll(@QueryParam(&quot;start&quot;) Integer startPosition, @QueryParam(&quot;max&quot;) Integer maxResult)
+   {
+<span class="nc" id="L87">      TypedQuery&lt;Booking&gt; findAllQuery = em.createQuery(&quot;SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.tickets LEFT JOIN FETCH b.performance ORDER BY b.id&quot;, Booking.class);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">      if (startPosition != null)</span>
+      {
+<span class="nc" id="L90">         findAllQuery.setFirstResult(startPosition);</span>
+      }
+<span class="nc bnc" id="L92" title="All 2 branches missed.">      if (maxResult != null)</span>
+      {
+<span class="nc" id="L94">         findAllQuery.setMaxResults(maxResult);</span>
+      }
+<span class="nc" id="L96">      final List&lt;Booking&gt; searchResults = findAllQuery.getResultList();</span>
+<span class="nc" id="L97">      final List&lt;BookingDTO&gt; results = new ArrayList&lt;BookingDTO&gt;();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">      for (Booking searchResult : searchResults)</span>
+      {
+<span class="nc" id="L100">         BookingDTO dto = new BookingDTO(searchResult);</span>
+<span class="nc" id="L101">         results.add(dto);</span>
+<span class="nc" id="L102">      }</span>
+<span class="nc" id="L103">      return results;</span>
+   }
+
+   @PUT
+   @Path(&quot;/{id:[0-9][0-9]*}&quot;)
+   @Consumes(&quot;application/json&quot;)
+   public Response update(@PathParam(&quot;id&quot;) Long id, BookingDTO dto)
+   {
+<span class="nc" id="L111">      TypedQuery&lt;Booking&gt; findByIdQuery = em.createQuery(&quot;SELECT DISTINCT b FROM Booking b LEFT JOIN FETCH b.tickets LEFT JOIN FETCH b.performance WHERE b.id = :entityId ORDER BY b.id&quot;, Booking.class);</span>
+<span class="nc" id="L112">      findByIdQuery.setParameter(&quot;entityId&quot;, id);</span>
+      Booking entity;
+      try
+      {
+<span class="nc" id="L116">         entity = findByIdQuery.getSingleResult();</span>
+      }
+<span class="nc" id="L118">      catch (NoResultException nre)</span>
+      {
+<span class="nc" id="L120">         entity = null;</span>
+<span class="nc" id="L121">      }</span>
+<span class="nc" id="L122">      entity = dto.fromDTO(entity, em);</span>
+      try
+      {
+<span class="nc" id="L125">         entity = em.merge(entity);</span>
+      }
+<span class="nc" id="L127">      catch (OptimisticLockException e)</span>
+      {
+<span class="nc" id="L129">         return Response.status(Response.Status.CONFLICT).entity(e.getEntity()).build();</span>
+<span class="nc" id="L130">      }</span>
+<span class="nc" id="L131">      return Response.noContent().build();</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

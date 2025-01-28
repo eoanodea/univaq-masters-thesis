@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BotStatusService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report monolith All Scenarios</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.rest</a> &gt; <span class="el_source">BotStatusService.java</span></div><h1>BotStatusService.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.rest;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.jboss.examples.ticketmonster.service.BotService;
+
+/**
+ * A non-RESTful service for providing the current state of the Bot. This service also allows the bot to be started, stopped or
+ * the existing bookings to be deleted.
+ * 
+ * @author Vineet Reynolds
+ * 
+ */
+@Path(&quot;/bot&quot;)
+<span class="nc" id="L23">public class BotStatusService {</span>
+
+    @Inject
+    private BotService botService;
+
+    /**
+     * Produces a JSON representation of the bot's log, containing a maximum of 50 messages logged by the Bot.
+     * 
+     * @return The JSON representation of the Bot's log
+     */
+    @Path(&quot;messages&quot;)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List&lt;String&gt; getMessages() {
+<span class="nc" id="L37">        return botService.fetchLog();</span>
+    }
+
+    /**
+     * Produces a representation of the bot's current state. This is a string - &quot;RUNNING&quot; or &quot;NOT_RUNNING&quot; depending on whether
+     * the bot is active.
+     * 
+     * @return The represntation of the Bot's current state.
+     */
+    @Path(&quot;status&quot;)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getBotStatus() {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        BotState state = botService.isBotActive() ? BotState.RUNNING</span>
+<span class="nc" id="L51">            : BotState.NOT_RUNNING;</span>
+<span class="nc" id="L52">        return Response.ok(state).build();</span>
+    }
+
+    /**
+     * Updates the state of the Bot with the provided state. This may trigger the bot to start itself, stop itself, or stop and
+     * delete all existing bookings.
+     * 
+     * @param updatedStatus The new state of the Bot. Only the state property is considered; any messages provided are ignored.
+     * @return An empty HTTP 201 response.
+     */
+    @Path(&quot;status&quot;)
+    @PUT
+    public Response updateBotStatus(BotState updatedState) {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (updatedState.equals(BotState.RUNNING)) {</span>
+<span class="nc" id="L66">            botService.start();</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        } else if (updatedState.equals(BotState.NOT_RUNNING)) {</span>
+<span class="nc" id="L68">            botService.stop();</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        } else if (updatedState.equals(BotState.RESET)) {</span>
+<span class="nc" id="L70">            botService.deleteAll();</span>
+        }
+<span class="nc" id="L72">        return Response.noContent().build();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

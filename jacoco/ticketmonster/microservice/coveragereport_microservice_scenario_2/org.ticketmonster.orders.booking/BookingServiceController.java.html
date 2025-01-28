@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookingServiceController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice Scenario 2</a> &gt; <a href="index.source.html" class="el_package">org.ticketmonster.orders.booking</a> &gt; <span class="el_source">BookingServiceController.java</span></div><h1>BookingServiceController.java</h1><pre class="source lang-java linenums">/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * &lt;p&gt;
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * &lt;p&gt;
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.ticketmonster.orders.booking;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.ticketmonster.orders.domain.*;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.*;
+
+/**
+ * Created by ceposta 
+ * &lt;a href=&quot;http://christianposta.com/blog&gt;http://christianposta.com/blog&lt;/a&gt;.
+ */
+@RestController
+@RequestMapping(&quot;/rest/bookings&quot;)
+<span class="nc" id="L40">public class BookingServiceController {</span>
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Autowired
+    SeatAllocationService seatAllocationService;
+
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
+    public Booking createBooking(@RequestBody BookingRequested bookingRequest) {
+        try {
+            // identify the ticket price ids in this request
+<span class="nc" id="L53">            Set&lt;Long&gt; ticketPriceIds = bookingRequest.getUniqueTicketPriceIds();</span>
+
+            // As we can have a mix of ticket types in a booking, we need to load all of them that are relevant,
+            // id
+<span class="nc" id="L57">            Map&lt;Long, TicketPriceGuide&gt; ticketPricesById = loadTicketPrices(ticketPriceIds);</span>
+
+            // Now, start to create the booking from the posted data
+            // Set the simple stuff first!
+
+            // todo lookup the performance and make sure it's valid as well as get its name
+<span class="nc" id="L63">            PerformanceId performance = new PerformanceId(bookingRequest.getPerformance(), &quot;Hardcoded Perf Name -- need to lookup&quot;);</span>
+
+<span class="nc" id="L65">            Booking booking = new Booking();</span>
+<span class="nc" id="L66">            booking.setContactEmail(bookingRequest.getEmail());</span>
+<span class="nc" id="L67">            booking.setPerformanceId(performance);</span>
+
+            // TODO ceposta: why is this hardcoed?
+<span class="nc" id="L70">            booking.setCancellationCode(&quot;abc&quot;);</span>
+
+            // Now, we iterate over each ticket that was requested, and organize them by section. Each
+            // section will have a map of ticketCategory-&gt;ticketsRequested
+            // we want to allocate ticket requests that belong to the same section contiguously
+<span class="nc" id="L75">            Map&lt;Section, Map&lt;TicketCategory, TicketRequest&gt;&gt; ticketRequestsPerSection</span>
+<span class="nc" id="L76">                    = new TreeMap&lt;Section, java.util.Map&lt;TicketCategory, TicketRequest&gt;&gt;(SectionComparator.instance());</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            for (TicketRequest ticketRequest : bookingRequest.getTicketRequests()) {</span>
+
+<span class="nc" id="L80">                final TicketPriceGuide ticketPriceGuide = ticketPricesById.get(ticketRequest.getTicketPriceGuideId());</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                if (!ticketRequestsPerSection.containsKey(ticketPriceGuide.getSection())) {</span>
+<span class="nc" id="L83">                    ticketRequestsPerSection</span>
+<span class="nc" id="L84">                            .put(ticketPriceGuide.getSection(), new HashMap&lt;TicketCategory, TicketRequest&gt;());</span>
+                }
+<span class="nc" id="L86">                ticketRequestsPerSection.get(ticketPriceGuide.getSection())</span>
+<span class="nc" id="L87">                        .put(extractTicketCategory(ticketPricesById, ticketRequest), ticketRequest);</span>
+<span class="nc" id="L88">            }</span>
+
+            // Now, we can allocate the tickets
+            // Iterate over the sections, finding the candidate seats for allocation
+            // The process will lock the record for a given
+            // Use deterministic ordering to prevent deadlocks
+<span class="nc" id="L94">            Map&lt;Section, AllocatedSeats&gt; allocatedSeatsPerSection = new TreeMap&lt;Section, AllocatedSeats&gt;(SectionComparator.instance());</span>
+
+<span class="nc" id="L96">            List&lt;Section&gt; failedSections = new ArrayList&lt;Section&gt;();</span>
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            for (Section section : ticketRequestsPerSection.keySet()) {</span>
+<span class="nc" id="L99">                int totalTicketsRequestedPerSection = 0;</span>
+                // Compute the total number of tickets required (a ticket category doesn't impact the actual seat!)
+<span class="nc" id="L101">                final Map&lt;TicketCategory, TicketRequest&gt; ticketRequestsByCategories = ticketRequestsPerSection.get(section);</span>
+                // calculate the total quantity of tickets to be allocated in this section
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                for (TicketRequest ticketRequest : ticketRequestsByCategories.values()) {</span>
+<span class="nc" id="L104">                    totalTicketsRequestedPerSection += ticketRequest.getQuantity();</span>
+<span class="nc" id="L105">                }</span>
+
+                // *********************
+                // try to allocate seats
+                // *********************
+<span class="nc" id="L110">                AllocatedSeats allocatedSeats = seatAllocationService.allocateSeats(section, performance, totalTicketsRequestedPerSection, true);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                if (allocatedSeats.getSeats().size() == totalTicketsRequestedPerSection) {</span>
+<span class="nc" id="L112">                    allocatedSeatsPerSection.put(section, allocatedSeats);</span>
+                } else {
+<span class="nc" id="L114">                    failedSections.add(section);</span>
+                }
+<span class="nc" id="L116">            }</span>
+
+            // if there are no failed sections, return success!!
+            // this is kinda silly though because we may still want to allocate sections up to what we can and
+            // ask display to the user which allocations we could get and let them decide what they want to do?
+            // or we have a reservation step before they get the payment which will give them that information.
+<span class="nc bnc" id="L122" title="All 2 branches missed.">            if (failedSections.isEmpty()) {</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                for (Section section : allocatedSeatsPerSection.keySet()) {</span>
+                    // allocation was successful, begin generating tickets
+                    // associate each allocated seat with a ticket, assigning a price category to it
+<span class="nc" id="L126">                    final Map&lt;TicketCategory, TicketRequest&gt; ticketRequestsByCategories = ticketRequestsPerSection.get(section);</span>
+<span class="nc" id="L127">                    AllocatedSeats allocatedSeats = allocatedSeatsPerSection.get(section);</span>
+<span class="nc" id="L128">                    allocatedSeats.markOccupied();</span>
+<span class="nc" id="L129">                    int seatCounter = 0;</span>
+                    // Now, add a ticket for each requested ticket to the booking
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                    for (TicketCategory ticketCategory : ticketRequestsByCategories.keySet()) {</span>
+<span class="nc" id="L132">                        final TicketRequest ticketRequest = ticketRequestsByCategories.get(ticketCategory);</span>
+<span class="nc" id="L133">                        final TicketPriceGuide ticketPriceGuide = ticketPricesById.get(ticketRequest.getTicketPriceGuideId());</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                        for (int i = 0; i &lt; ticketRequest.getQuantity(); i++) {</span>
+<span class="nc" id="L135">                            Ticket ticket = new Ticket(allocatedSeats.getSeats().get(seatCounter + i), ticketCategory, ticketPriceGuide.getPrice());</span>
+                            // getEntityManager().persist(ticket);
+<span class="nc" id="L137">                            booking.getTickets().add(ticket);</span>
+                        }
+<span class="nc" id="L139">                        seatCounter += ticketRequest.getQuantity();</span>
+<span class="nc" id="L140">                    }</span>
+<span class="nc" id="L141">                }</span>
+                // Persist the booking, including cascaded relationships
+<span class="nc" id="L143">                booking.setPerformanceId(performance);</span>
+<span class="nc" id="L144">                booking.setCancellationCode(&quot;abc&quot;);</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                if (bookingRequest.isSynthetic()) {</span>
+<span class="nc" id="L147">                    System.out.println(&quot;This is a synthetic transaction, ignoring&quot;);</span>
+<span class="nc" id="L148">                    SyntheticBooking syntheticBooking = new SyntheticBooking(booking);</span>
+<span class="nc" id="L149">                    return syntheticBooking;</span>
+                }
+                else {
+<span class="nc" id="L152">                    entityManager.persist(booking);</span>
+<span class="nc" id="L153">                    return booking;</span>
+                }
+
+            } else {
+
+                // cannot allocated all the sections so we just error out!?
+                // TODO ceposta: we need to change this so we still allocate some? and report back how many we got?
+                // and possibly ask about a waitlist?
+<span class="nc" id="L161">                Map&lt;String, Object&gt; responseEntity = new HashMap&lt;String, Object&gt;();</span>
+<span class="nc" id="L162">                responseEntity.put(&quot;errors&quot;, Collections.singletonList(&quot;Cannot allocate the requested number of seats!&quot;));</span>
+<span class="nc" id="L163">                throw new RestServiceException(responseEntity);</span>
+            }
+<span class="nc" id="L165">        } catch (Exception e) {</span>
+            // Finally, handle unexpected exceptions
+<span class="nc" id="L167">            e.printStackTrace();</span>
+<span class="nc" id="L168">            Map&lt;String, Object&gt; errors = new HashMap&lt;String, Object&gt;();</span>
+<span class="nc" id="L169">            errors.put(&quot;errors&quot;, Collections.singletonList(e.getMessage()));</span>
+<span class="nc" id="L170">            errors.put(&quot;stacktrace&quot;, Collections.singletonList(getStackTrace(e)));</span>
+            // A WebApplicationException can wrap a response
+            // Throwing the exception causes an automatic rollback
+<span class="nc" id="L173">            throw new RestServiceException(errors);</span>
+        }
+
+    }
+
+    private TicketCategory extractTicketCategory(Map&lt;Long, TicketPriceGuide&gt; ticketPricesById, TicketRequest ticketRequest) {
+<span class="nc" id="L179">        return ticketPricesById.get(ticketRequest.getTicketPriceGuideId()).getTicketCategory();</span>
+    }
+
+    private String getStackTrace(Exception e) {
+<span class="nc" id="L183">        StringWriter sw = new StringWriter();</span>
+<span class="nc" id="L184">        PrintWriter pw = new PrintWriter(sw);</span>
+<span class="nc" id="L185">        e.printStackTrace(pw);</span>
+<span class="nc" id="L186">        return sw.toString();</span>
+    }
+
+    private Map&lt;Long, TicketPriceGuide&gt; loadTicketPrices(Set&lt;Long&gt; priceCategoryIds) {
+<span class="nc" id="L190">        List&lt;TicketPriceGuide&gt; ticketPriceGuides = (List&lt;TicketPriceGuide&gt;) entityManager</span>
+<span class="nc" id="L191">                .createQuery(&quot;select p from TicketPriceGuide p where p.id in :ids&quot;, TicketPriceGuide.class)</span>
+<span class="nc" id="L192">                .setParameter(&quot;ids&quot;, priceCategoryIds).getResultList();</span>
+        // Now, map them by id
+<span class="nc" id="L194">        Map&lt;Long, TicketPriceGuide&gt; ticketPricesById = new HashMap&lt;Long, TicketPriceGuide&gt;();</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        for (TicketPriceGuide ticketPriceGuide : ticketPriceGuides) {</span>
+<span class="nc" id="L196">            ticketPricesById.put(ticketPriceGuide.getId(), ticketPriceGuide);</span>
+<span class="nc" id="L197">        }</span>
+<span class="nc" id="L198">        return ticketPricesById;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShowDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice Scenario 2</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.rest.dto</a> &gt; <span class="el_source">ShowDTO.java</span></div><h1>ShowDTO.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.rest.dto;
+
+import java.io.Serializable;
+
+import org.jboss.examples.ticketmonster.model.Booking;
+import org.jboss.examples.ticketmonster.model.SectionAllocation;
+import org.jboss.examples.ticketmonster.model.Show;
+
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.jboss.examples.ticketmonster.rest.dto.NestedEventDTO;
+
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+
+import org.jboss.examples.ticketmonster.rest.dto.NestedPerformanceDTO;
+import org.jboss.examples.ticketmonster.model.Performance;
+
+import java.util.Iterator;
+
+import org.jboss.examples.ticketmonster.rest.dto.NestedVenueDTO;
+import org.jboss.examples.ticketmonster.rest.dto.NestedTicketPriceDTO;
+import org.jboss.examples.ticketmonster.model.TicketPrice;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+public class ShowDTO implements Serializable
+{
+
+   private Long id;
+   private NestedEventDTO event;
+<span class="nc" id="L38">   private Set&lt;NestedPerformanceDTO&gt; performances = new HashSet&lt;NestedPerformanceDTO&gt;();</span>
+   private NestedVenueDTO venue;
+<span class="nc" id="L40">   private Set&lt;NestedTicketPriceDTO&gt; ticketPrices = new HashSet&lt;NestedTicketPriceDTO&gt;();</span>
+   private String displayTitle;
+
+   public ShowDTO()
+<span class="nc" id="L44">   {</span>
+<span class="nc" id="L45">   }</span>
+
+   public ShowDTO(final Show entity)
+<span class="nc" id="L48">   {</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">      if (entity != null)</span>
+      {
+<span class="nc" id="L51">         this.id = entity.getId();</span>
+<span class="nc" id="L52">         this.event = new NestedEventDTO(entity.getEvent());</span>
+<span class="nc" id="L53">         Iterator&lt;Performance&gt; iterPerformances = entity.getPerformances()</span>
+<span class="nc" id="L54">               .iterator();</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">         while (iterPerformances.hasNext())</span>
+         {
+<span class="nc" id="L57">            Performance element = iterPerformances.next();</span>
+<span class="nc" id="L58">            this.performances.add(new NestedPerformanceDTO(element));</span>
+<span class="nc" id="L59">         }</span>
+<span class="nc" id="L60">         this.venue = new NestedVenueDTO(entity.getVenue());</span>
+<span class="nc" id="L61">         Iterator&lt;TicketPrice&gt; iterTicketPrices = entity.getTicketPrices()</span>
+<span class="nc" id="L62">               .iterator();</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">         while (iterTicketPrices.hasNext())</span>
+         {
+<span class="nc" id="L65">            TicketPrice element = iterTicketPrices.next();</span>
+<span class="nc" id="L66">            this.ticketPrices.add(new NestedTicketPriceDTO(element));</span>
+<span class="nc" id="L67">         }</span>
+<span class="nc" id="L68">         this.displayTitle = entity.toString();</span>
+      }
+<span class="nc" id="L70">   }</span>
+
+   public Show fromDTO(Show entity, EntityManager em)
+   {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">      if (entity == null)</span>
+      {
+<span class="nc" id="L76">         entity = new Show();</span>
+      }
+<span class="nc bnc" id="L78" title="All 2 branches missed.">      if (this.event != null)</span>
+      {
+<span class="nc" id="L80">         entity.setEvent(this.event.fromDTO(entity.getEvent(), em));</span>
+      }
+<span class="nc" id="L82">      Iterator&lt;Performance&gt; iterPerformances = entity.getPerformances()</span>
+<span class="nc" id="L83">            .iterator();</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">      while (iterPerformances.hasNext())</span>
+      {
+<span class="nc" id="L86">         boolean found = false;</span>
+<span class="nc" id="L87">         Performance performance = iterPerformances.next();</span>
+<span class="nc" id="L88">         Iterator&lt;NestedPerformanceDTO&gt; iterDtoPerformances = this</span>
+<span class="nc" id="L89">               .getPerformances().iterator();</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">         while (iterDtoPerformances.hasNext())</span>
+         {
+<span class="nc" id="L92">            NestedPerformanceDTO dtoPerformance = iterDtoPerformances</span>
+<span class="nc" id="L93">                  .next();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            if (dtoPerformance.getId().equals(performance.getId()))</span>
+            {
+<span class="nc" id="L96">               found = true;</span>
+<span class="nc" id="L97">               break;</span>
+            }
+<span class="nc" id="L99">         }</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">         if (found == false)</span>
+         {
+<span class="nc" id="L102">            iterPerformances.remove();</span>
+<span class="nc" id="L103">            List&lt;SectionAllocation&gt; sectionAllocations = findSectionAllocationsByPerformance(performance, em);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            for(SectionAllocation sectionAllocation: sectionAllocations)</span>
+            {
+<span class="nc" id="L106">               em.remove(sectionAllocation);</span>
+<span class="nc" id="L107">            }</span>
+<span class="nc" id="L108">            List&lt;Booking&gt; bookings = findBookingsByPerformance(performance, em);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            for(Booking booking: bookings)</span>
+            {
+<span class="nc" id="L111">               em.remove(booking);</span>
+<span class="nc" id="L112">            }</span>
+<span class="nc" id="L113">            em.remove(performance);</span>
+         }
+<span class="nc" id="L115">      }</span>
+<span class="nc" id="L116">      Iterator&lt;NestedPerformanceDTO&gt; iterDtoPerformances = this</span>
+<span class="nc" id="L117">            .getPerformances().iterator();</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">      while (iterDtoPerformances.hasNext())</span>
+      {
+<span class="nc" id="L120">         boolean found = false;</span>
+<span class="nc" id="L121">         NestedPerformanceDTO dtoPerformance = iterDtoPerformances.next();</span>
+<span class="nc" id="L122">         iterPerformances = entity.getPerformances().iterator();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">         while (iterPerformances.hasNext())</span>
+         {
+<span class="nc" id="L125">            Performance performance = iterPerformances.next();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            if (dtoPerformance.getId().equals(performance.getId()))</span>
+            {
+<span class="nc" id="L128">               found = true;</span>
+<span class="nc" id="L129">               break;</span>
+            }
+<span class="nc" id="L131">         }</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">         if (found == false)</span>
+         {
+<span class="nc" id="L134">            Iterator&lt;Performance&gt; resultIter = em</span>
+<span class="nc" id="L135">                  .createQuery(&quot;SELECT DISTINCT p FROM Performance p&quot;,</span>
+<span class="nc" id="L136">                        Performance.class).getResultList().iterator();</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            while (resultIter.hasNext())</span>
+            {
+<span class="nc" id="L139">               Performance result = resultIter.next();</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">               if (result.getId().equals(dtoPerformance.getId()))</span>
+               {
+<span class="nc" id="L142">                  entity.getPerformances().add(result);</span>
+<span class="nc" id="L143">                  break;</span>
+               }
+<span class="nc" id="L145">            }</span>
+         }
+<span class="nc" id="L147">      }</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">      if (this.venue != null)</span>
+      {
+<span class="nc" id="L150">         entity.setVenue(this.venue.fromDTO(entity.getVenue(), em));</span>
+      }
+<span class="nc" id="L152">      Iterator&lt;TicketPrice&gt; iterTicketPrices = entity.getTicketPrices()</span>
+<span class="nc" id="L153">            .iterator();</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">      while (iterTicketPrices.hasNext())</span>
+      {
+<span class="nc" id="L156">         boolean found = false;</span>
+<span class="nc" id="L157">         TicketPrice ticketPrice = iterTicketPrices.next();</span>
+<span class="nc" id="L158">         Iterator&lt;NestedTicketPriceDTO&gt; iterDtoTicketPrices = this</span>
+<span class="nc" id="L159">               .getTicketPrices().iterator();</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">         while (iterDtoTicketPrices.hasNext())</span>
+         {
+<span class="nc" id="L162">            NestedTicketPriceDTO dtoTicketPrice = iterDtoTicketPrices</span>
+<span class="nc" id="L163">                  .next();</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">            if (dtoTicketPrice.getId().equals(ticketPrice.getId()))</span>
+            {
+<span class="nc" id="L166">               found = true;</span>
+<span class="nc" id="L167">               break;</span>
+            }
+<span class="nc" id="L169">         }</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">         if (found == false)</span>
+         {
+<span class="nc" id="L172">            iterTicketPrices.remove();</span>
+         }
+<span class="nc" id="L174">      }</span>
+<span class="nc" id="L175">      Iterator&lt;NestedTicketPriceDTO&gt; iterDtoTicketPrices = this</span>
+<span class="nc" id="L176">            .getTicketPrices().iterator();</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">      while (iterDtoTicketPrices.hasNext())</span>
+      {
+<span class="nc" id="L179">         boolean found = false;</span>
+<span class="nc" id="L180">         NestedTicketPriceDTO dtoTicketPrice = iterDtoTicketPrices.next();</span>
+<span class="nc" id="L181">         iterTicketPrices = entity.getTicketPrices().iterator();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">         while (iterTicketPrices.hasNext())</span>
+         {
+<span class="nc" id="L184">            TicketPrice ticketPrice = iterTicketPrices.next();</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            if (dtoTicketPrice.getId().equals(ticketPrice.getId()))</span>
+            {
+<span class="nc" id="L187">               found = true;</span>
+<span class="nc" id="L188">               break;</span>
+            }
+<span class="nc" id="L190">         }</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">         if (found == false)</span>
+         {
+<span class="nc" id="L193">            Iterator&lt;TicketPrice&gt; resultIter = em</span>
+<span class="nc" id="L194">                  .createQuery(&quot;SELECT DISTINCT t FROM TicketPrice t&quot;,</span>
+<span class="nc" id="L195">                        TicketPrice.class).getResultList().iterator();</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            while (resultIter.hasNext())</span>
+            {
+<span class="nc" id="L198">               TicketPrice result = resultIter.next();</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">               if (result.getId().equals(dtoTicketPrice.getId()))</span>
+               {
+<span class="nc" id="L201">                  entity.getTicketPrices().add(result);</span>
+<span class="nc" id="L202">                  break;</span>
+               }
+<span class="nc" id="L204">            }</span>
+         }
+<span class="nc" id="L206">      }</span>
+<span class="nc" id="L207">      entity = em.merge(entity);</span>
+<span class="nc" id="L208">      return entity;</span>
+   }
+
+   public List&lt;SectionAllocation&gt; findSectionAllocationsByPerformance(Performance performance, EntityManager em)
+   {
+<span class="nc" id="L213">      CriteriaQuery&lt;SectionAllocation&gt; criteria = em</span>
+<span class="nc" id="L214">             .getCriteriaBuilder().createQuery(SectionAllocation.class);</span>
+<span class="nc" id="L215">      Root&lt;SectionAllocation&gt; from = criteria.from(SectionAllocation.class);</span>
+<span class="nc" id="L216">      CriteriaBuilder builder = em.getCriteriaBuilder();</span>
+<span class="nc" id="L217">      Predicate performanceIsSame = builder.equal(from.get(&quot;performance&quot;), performance);</span>
+<span class="nc" id="L218">      return em.createQuery(</span>
+<span class="nc" id="L219">             criteria.select(from).where(performanceIsSame)).getResultList();</span>
+   }
+   
+   public List&lt;Booking&gt; findBookingsByPerformance(Performance performance, EntityManager em)
+   {
+<span class="nc" id="L224">      CriteriaQuery&lt;Booking&gt; criteria = em.getCriteriaBuilder().createQuery(Booking.class);</span>
+<span class="nc" id="L225">      Root&lt;Booking&gt; from = criteria.from(Booking.class);</span>
+<span class="nc" id="L226">      CriteriaBuilder builder = em.getCriteriaBuilder();</span>
+<span class="nc" id="L227">      Predicate performanceIsSame = builder.equal(from.get(&quot;performance&quot;), performance);</span>
+<span class="nc" id="L228">      return em.createQuery(</span>
+<span class="nc" id="L229">             criteria.select(from).where(performanceIsSame)).getResultList();</span>
+   }
+
+   public Long getId()
+   {
+<span class="nc" id="L234">      return this.id;</span>
+   }
+
+   public void setId(final Long id)
+   {
+<span class="nc" id="L239">      this.id = id;</span>
+<span class="nc" id="L240">   }</span>
+
+   public NestedEventDTO getEvent()
+   {
+<span class="nc" id="L244">      return this.event;</span>
+   }
+
+   public void setEvent(final NestedEventDTO event)
+   {
+<span class="nc" id="L249">      this.event = event;</span>
+<span class="nc" id="L250">   }</span>
+
+   public Set&lt;NestedPerformanceDTO&gt; getPerformances()
+   {
+<span class="nc" id="L254">      return this.performances;</span>
+   }
+
+   public void setPerformances(final Set&lt;NestedPerformanceDTO&gt; performances)
+   {
+<span class="nc" id="L259">      this.performances = performances;</span>
+<span class="nc" id="L260">   }</span>
+
+   public NestedVenueDTO getVenue()
+   {
+<span class="nc" id="L264">      return this.venue;</span>
+   }
+
+   public void setVenue(final NestedVenueDTO venue)
+   {
+<span class="nc" id="L269">      this.venue = venue;</span>
+<span class="nc" id="L270">   }</span>
+
+   public Set&lt;NestedTicketPriceDTO&gt; getTicketPrices()
+   {
+<span class="nc" id="L274">      return this.ticketPrices;</span>
+   }
+
+   public void setTicketPrices(final Set&lt;NestedTicketPriceDTO&gt; ticketPrices)
+   {
+<span class="nc" id="L279">      this.ticketPrices = ticketPrices;</span>
+<span class="nc" id="L280">   }</span>
+
+   public String getDisplayTitle()
+   {
+<span class="nc" id="L284">      return this.displayTitle;</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NestedPerformanceDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice Scenario 2</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.rest.dto</a> &gt; <span class="el_source">NestedPerformanceDTO.java</span></div><h1>NestedPerformanceDTO.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.rest.dto;
+
+import java.io.Serializable;
+import org.jboss.examples.ticketmonster.model.Performance;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import java.util.Date;
+
+public class NestedPerformanceDTO implements Serializable
+{
+
+   private Long id;
+   private Date date;
+   private String displayTitle;
+
+   public NestedPerformanceDTO()
+<span class="nc" id="L17">   {</span>
+<span class="nc" id="L18">   }</span>
+
+   public NestedPerformanceDTO(final Performance entity)
+<span class="nc" id="L21">   {</span>
+<span class="nc bnc" id="L22" title="All 2 branches missed.">      if (entity != null)</span>
+      {
+<span class="nc" id="L24">         this.id = entity.getId();</span>
+<span class="nc" id="L25">         this.date = entity.getDate();</span>
+<span class="nc" id="L26">         this.displayTitle = entity.toString();</span>
+      }
+<span class="nc" id="L28">   }</span>
+
+   public Performance fromDTO(Performance entity, EntityManager em)
+   {
+<span class="nc bnc" id="L32" title="All 2 branches missed.">      if (entity == null)</span>
+      {
+<span class="nc" id="L34">         entity = new Performance();</span>
+      }
+<span class="nc bnc" id="L36" title="All 2 branches missed.">      if (this.id != null)</span>
+      {
+<span class="nc" id="L38">         TypedQuery&lt;Performance&gt; findByIdQuery = em</span>
+<span class="nc" id="L39">               .createQuery(</span>
+                     &quot;SELECT DISTINCT p FROM Performance p WHERE p.id = :entityId&quot;,
+                     Performance.class);
+<span class="nc" id="L42">         findByIdQuery.setParameter(&quot;entityId&quot;, this.id);</span>
+         try
+         {
+<span class="nc" id="L45">            entity = findByIdQuery.getSingleResult();</span>
+         }
+<span class="nc" id="L47">         catch (javax.persistence.NoResultException nre)</span>
+         {
+<span class="nc" id="L49">            entity = null;</span>
+<span class="nc" id="L50">         }</span>
+<span class="nc" id="L51">         return entity;</span>
+      }
+<span class="nc" id="L53">      entity.setDate(this.date);</span>
+<span class="nc" id="L54">      entity = em.merge(entity);</span>
+<span class="nc" id="L55">      return entity;</span>
+   }
+
+   public Long getId()
+   {
+<span class="nc" id="L60">      return this.id;</span>
+   }
+
+   public void setId(final Long id)
+   {
+<span class="nc" id="L65">      this.id = id;</span>
+<span class="nc" id="L66">   }</span>
+
+   public Date getDate()
+   {
+<span class="nc" id="L70">      return this.date;</span>
+   }
+
+   public void setDate(final Date date)
+   {
+<span class="nc" id="L75">      this.date = date;</span>
+<span class="nc" id="L76">   }</span>
+
+   public String getDisplayTitle()
+   {
+<span class="nc" id="L80">      return this.displayTitle;</span>
+   }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

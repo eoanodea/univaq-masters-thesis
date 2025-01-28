@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MetricsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report monolith All Scenarios</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.rest</a> &gt; <span class="el_source">MetricsService.java</span></div><h1>MetricsService.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.rest;
+
+import java.util.*;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+import org.jboss.examples.ticketmonster.model.Show;
+
+/**
+ * A read-only REST resource that provides a collection of metrics for shows occuring in the future. Updates to metrics via
+ * POST/PUT etc. are not allowed, since they are not meant to be computed by consumers.
+ * 
+ * @author Vineet Reynolds
+ * 
+ */
+@Path(&quot;/metrics&quot;)
+@Stateless
+<span class="nc" id="L26">public class MetricsService {</span>
+
+    @Inject
+    private EntityManager entityManager;
+
+    /**
+     * Retrieves a collection of metrics for Shows. Each metric in the collection contains
+     * &lt;ul&gt;
+     * &lt;li&gt;the show id,&lt;/li&gt;
+     * &lt;li&gt;the event name of the show,&lt;/li&gt;
+     * &lt;li&gt;the venue for the show,&lt;/li&gt;
+     * &lt;li&gt;the capacity for the venue&lt;/li&gt;
+     * &lt;li&gt;the performances for the show,
+     * &lt;ul&gt;
+     * &lt;li&gt;the timestamp for each performance,&lt;/li&gt;
+     * &lt;li&gt;the occupied count for each performance&lt;/li&gt;
+     * &lt;/ul&gt;
+     * &lt;/li&gt;
+     * &lt;/ul&gt;
+     * 
+     * @return A JSON representation of metrics for shows.
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List&lt;ShowMetric&gt; getMetrics() {
+<span class="nc" id="L51">        return retrieveMetricsFromShows(retrieveShows(),</span>
+<span class="nc" id="L52">            retrieveOccupiedCounts());</span>
+    }
+
+    private List&lt;ShowMetric&gt; retrieveMetricsFromShows(List&lt;Show&gt; shows,
+        Map&lt;Long, Long&gt; occupiedCounts) {
+<span class="nc" id="L57">        List&lt;ShowMetric&gt; metrics = new ArrayList&lt;ShowMetric&gt;();</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        for (Show show : shows) {</span>
+<span class="nc" id="L59">            metrics.add(new ShowMetric(show, occupiedCounts));</span>
+<span class="nc" id="L60">        }</span>
+<span class="nc" id="L61">        return metrics;</span>
+    }
+
+    private List&lt;Show&gt; retrieveShows() {
+<span class="nc" id="L65">        TypedQuery&lt;Show&gt; showQuery = entityManager</span>
+<span class="nc" id="L66">            .createQuery(&quot;select DISTINCT s from Show s JOIN s.performances p&quot;, Show.class);</span>
+<span class="nc" id="L67">        return showQuery.getResultList();</span>
+    }
+
+    private Map&lt;Long, Long&gt; retrieveOccupiedCounts() {
+<span class="nc" id="L71">        Map&lt;Long, Long&gt; occupiedCounts = new HashMap&lt;Long, Long&gt;();</span>
+
+<span class="nc" id="L73">        Query occupiedCountsQuery = entityManager</span>
+<span class="nc" id="L74">            .createQuery(&quot;select b.performance.id, SIZE(b.tickets) from Booking b &quot;</span>
+                + &quot;GROUP BY b.performance.id&quot;);
+
+<span class="nc" id="L77">        List&lt;Object[]&gt; results = occupiedCountsQuery.getResultList();</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        for (Object[] result : results) {</span>
+<span class="nc" id="L79">            occupiedCounts.put((Long) result[0],</span>
+<span class="nc" id="L80">                ((Integer) result[1]).longValue());</span>
+<span class="nc" id="L81">        }</span>
+
+<span class="nc" id="L83">        return occupiedCounts;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

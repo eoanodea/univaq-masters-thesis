@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Venue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report monolith Scenario 1</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.model</a> &gt; <span class="el_source">Venue.java</span></div><h1>Venue.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.model;
+
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.FetchType.EAGER;
+import static javax.persistence.GenerationType.IDENTITY;
+
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+import org.hibernate.validator.constraints.NotEmpty;
+
+/**
+ * &lt;p&gt;
+ * Represents a single venue
+ * &lt;/p&gt;
+ * 
+ * @author Shane Bryzak
+ * @author Pete Muir
+ */
+/*
+ * We suppress the warning about not specifying a serialVersionUID, as we are still developing this app, and want the JVM to
+ * generate the serialVersionUID for us. When we put this app into production, we'll generate and embed the serialVersionUID
+ */
+@SuppressWarnings(&quot;serial&quot;)
+@Entity
+<span class="fc" id="L34">public class Venue implements Serializable {</span>
+
+    /* Declaration of fields */
+
+    /**
+     * The synthetic id of the object.
+     */
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    private Long id;
+
+    /**
+     * &lt;p&gt;
+     * The name of the event.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The name of the event forms it's natural identity and cannot be shared between events.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The name must not be null and must be one or more characters, the Bean Validation constrain &lt;code&gt;@NotEmpty&lt;/code&gt;
+     * enforces this.
+     * &lt;/p&gt;
+     */
+    @Column(unique = true)
+    @NotEmpty
+    private String name;
+
+    /**
+     * The address of the venue
+     */
+<span class="fc" id="L66">    private Address address = new Address();</span>
+
+    /**
+     * A description of the venue
+     */
+    private String description;
+
+    /**
+     * &lt;p&gt;
+     * A set of sections in the venue
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The &lt;code&gt;@OneToMany&lt;code&gt; JPA mapping establishes this relationship. TODO Explain EAGER fetch. 
+     * This relationship is bi-directional (a section knows which venue it is part of), and the &lt;code&gt;mappedBy&lt;/code&gt;
+     * attribute establishes this. We cascade all persistence operations to the set of performances, so, for example if a venue
+     * is removed, then all of it's sections will also be removed.
+     * &lt;/p&gt;
+     */
+<span class="fc" id="L85">    @OneToMany(cascade = ALL, fetch = EAGER, mappedBy = &quot;venue&quot;)</span>
+    private Set&lt;Section&gt; sections = new HashSet&lt;Section&gt;();
+
+    /**
+     * The capacity of the venue
+     */
+    private int capacity;
+
+    /**
+     * An optional media item to entice punters to the venue. The &lt;code&gt;@ManyToOne&lt;/code&gt; establishes the relationship.
+     */
+    @ManyToOne
+    private MediaItem mediaItem;
+
+    /* Boilerplate getters and setters */
+    
+    public Long getId() {
+<span class="fc" id="L102">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="nc" id="L106">        this.id = id;</span>
+<span class="nc" id="L107">    }</span>
+
+    public String getName() {
+<span class="fc" id="L110">        return name;</span>
+    }
+
+    public void setName(String name) {
+<span class="nc" id="L114">        this.name = name;</span>
+<span class="nc" id="L115">    }</span>
+
+    public Address getAddress() {
+<span class="fc" id="L118">        return address;</span>
+    }
+
+    public void setAddress(Address address) {
+<span class="nc" id="L122">        this.address = address;</span>
+<span class="nc" id="L123">    }</span>
+
+    public MediaItem getMediaItem() {
+<span class="fc" id="L126">        return mediaItem;</span>
+    }
+
+    public void setMediaItem(MediaItem description) {
+<span class="nc" id="L130">        this.mediaItem = description;</span>
+<span class="nc" id="L131">    }</span>
+
+    public String getDescription() {
+<span class="fc" id="L134">        return description;</span>
+    }
+
+    public void setDescription(String description) {
+<span class="nc" id="L138">        this.description = description;</span>
+<span class="nc" id="L139">    }</span>
+
+    public Set&lt;Section&gt; getSections() {
+<span class="fc" id="L142">        return sections;</span>
+    }
+
+    public void setSections(Set&lt;Section&gt; sections) {
+<span class="nc" id="L146">        this.sections = sections;</span>
+<span class="nc" id="L147">    }</span>
+
+    public int getCapacity() {
+<span class="fc" id="L150">        return capacity;</span>
+    }
+
+    public void setCapacity(int capacity) {
+<span class="nc" id="L154">        this.capacity = capacity;</span>
+<span class="nc" id="L155">    }</span>
+
+    /* toString(), equals() and hashCode() for Venue, using the natural identity of the object */
+    
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (this == o)</span>
+<span class="nc" id="L162">            return true;</span>
+<span class="nc bnc" id="L163" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass())</span>
+<span class="nc" id="L164">            return false;</span>
+
+<span class="nc" id="L166">        Venue venue = (Venue) o;</span>
+
+<span class="nc bnc" id="L168" title="All 6 branches missed.">        if (address != null ? !address.equals(venue.address) : venue.address != null)</span>
+<span class="nc" id="L169">            return false;</span>
+<span class="nc bnc" id="L170" title="All 6 branches missed.">        if (name != null ? !name.equals(venue.name) : venue.name != null)</span>
+<span class="nc" id="L171">            return false;</span>
+
+<span class="nc" id="L173">        return true;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">        int result = name != null ? name.hashCode() : 0;</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">        result = 31 * result + (address != null ? address.hashCode() : 0);</span>
+<span class="fc" id="L180">        return result;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L185">        return name;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookingRequested.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice Scenario 3</a> &gt; <a href="index.source.html" class="el_package">org.ticketmonster.orders.booking</a> &gt; <span class="el_source">BookingRequested.java</span></div><h1>BookingRequested.java</h1><pre class="source lang-java linenums">/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * &lt;p&gt;
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * &lt;p&gt;
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.ticketmonster.orders.booking;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Created by ceposta 
+ * &lt;a href=&quot;http://christianposta.com/blog&gt;http://christianposta.com/blog&lt;/a&gt;.
+ */
+public class BookingRequested {
+
+<span class="nc" id="L30">    private List&lt;TicketRequest&gt; ticketRequests = new ArrayList&lt;TicketRequest&gt;();</span>
+    private long performance;
+    private String email;
+    private boolean synthetic;
+
+<span class="nc" id="L35">    public BookingRequested() {</span>
+<span class="nc" id="L36">        this.synthetic = false;</span>
+<span class="nc" id="L37">    }</span>
+
+    public List&lt;TicketRequest&gt; getTicketRequests() {
+<span class="nc" id="L40">        return ticketRequests;</span>
+    }
+
+    public void setTicketRequests(List&lt;TicketRequest&gt; ticketRequests) {
+<span class="nc" id="L44">        this.ticketRequests = ticketRequests;</span>
+<span class="nc" id="L45">    }</span>
+
+    public long getPerformance() {
+<span class="nc" id="L48">        return performance;</span>
+    }
+
+    public void setPerformance(long performance) {
+<span class="nc" id="L52">        this.performance = performance;</span>
+<span class="nc" id="L53">    }</span>
+
+    public String getEmail() {
+<span class="nc" id="L56">        return email;</span>
+    }
+
+    public void setEmail(String email) {
+<span class="nc" id="L60">        this.email = email;</span>
+<span class="nc" id="L61">    }</span>
+
+    public Set&lt;Long&gt; getUniqueTicketPriceIds() {
+<span class="nc" id="L64">        HashSet&lt;Long&gt; ids = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L65">        this.ticketRequests.forEach((v) -&gt; ids.add(v.getTicketPriceGuideId()));</span>
+<span class="nc" id="L66">        return ids;</span>
+    }
+
+    public boolean isSynthetic() {
+<span class="nc" id="L70">        return synthetic;</span>
+    }
+
+    public void setSynthetic(boolean synthetic) {
+<span class="nc" id="L74">        this.synthetic = synthetic;</span>
+<span class="nc" id="L75">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

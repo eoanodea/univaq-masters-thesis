@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Show.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice All Scenarios</a> &gt; <a href="index.source.html" class="el_package">org.ticketmonster.orders.domain</a> &gt; <span class="el_source">Show.java</span></div><h1>Show.java</h1><pre class="source lang-java linenums">package org.ticketmonster.orders.domain;
+
+import org.teiid.spring.annotations.SelectQuery;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
+
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.FetchType.EAGER;
+import static javax.persistence.GenerationType.IDENTITY;
+
+/**
+ * &lt;p&gt;
+ * A show is an instance of an event taking place at a particular venue. A show can have multiple performances.
+ * &lt;/p&gt;
+ * 
+ * &lt;p&gt;
+ * A show contains a set of performances, and a set of ticket prices for each section of the venue for this show.
+ * &lt;/p&gt;
+ * 
+ * &lt;p&gt;
+ * The event and venue form the natural id of this entity, and therefore must be unique. JPA requires us to use the class level
+ * &lt;code&gt;@Table&lt;/code&gt; constraint.
+ * &lt;/p&gt;
+ * 
+ * @author Shane Bryzak
+ * @author Pete Muir
+ */
+/*
+ * We suppress the warning about not specifying a serialVersionUID, as we are still developing this app, and want the JVM to
+ * generate the serialVersionUID for us. When we put this app into production, we'll generate and embed the serialVersionUID
+ */
+// todo note that this &quot;show&quot; is not the exact same show that we have in the backend
+// because it doesn't really represent a collection of performances; in this model, we don't
+// care about performances
+@SuppressWarnings(&quot;serial&quot;)
+@SelectQuery(&quot;SELECT a.id, a.event_id, e.name AS event_name, a.venue_id, v.name AS venue_name &quot; +
+        &quot;FROM legacyDS.Appearance a &quot; +
+        &quot;JOIN legacyDS.Event e ON a.event_id=e.id &quot; +
+        &quot;JOIN legacyDS.Venue v ON a.venue_id=v.id;&quot;)
+@Entity
+@Table(name=&quot;appearance&quot;, uniqueConstraints = @UniqueConstraint(columnNames = { &quot;event_id&quot;, &quot;venue_id&quot; }))
+<span class="nc" id="L46">public class Show implements Serializable {</span>
+
+    /* Declaration of fields */
+
+    /**
+     * The synthetic id of the object.
+     */
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    private Long id;
+
+    /**
+     * &lt;p&gt;
+     * The event of which this show is an instance. The &lt;code&gt;@ManyToOne&lt;code&gt; JPA mapping establishes this relationship.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The &lt;code&gt;@NotNull&lt;/code&gt; Bean Validation constraint means that the event must be specified.
+     * &lt;/p&gt;
+     */
+    @NotNull
+    @Embedded
+    private EventId eventId;
+
+    /**
+     * &lt;p&gt;
+     * The venue where this show takes place. The &lt;code&gt;@ManyToOne&lt;code&gt; JPA mapping establishes this relationship.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The &lt;code&gt;@NotNull&lt;/code&gt; Bean Validation constraint means that the venue must be specified.
+     * &lt;/p&gt;
+     */
+    @NotNull
+    @Embedded
+    private VenueId venueId;
+
+    /**
+     * &lt;p&gt;
+     * The set of performances of this show.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The &lt;code&gt;@OneToMany&lt;code&gt; JPA mapping establishes this relationship.
+     * This relationship is bi-directional (a performance knows which show it is part of), and the &lt;code&gt;mappedBy&lt;/code&gt;
+     * attribute establishes this. We cascade all persistence operations to the set of performances, so, for example if a show
+     * is removed, then all of it's performances will also be removed.
+     * &lt;/p&gt;
+     * 
+     * UPDATED: actually, this is a great opporunity to point out the differences in the model between
+     * the orders bounded context. For example: our pricing is fairly coarse grained (by business rules)...
+     * we only price by the over all show, not individual performances. So our &quot;show&quot; doesn't really care about
+     * the rest of the performances; this information would be necessary (and stored) where it matters (in its
+     * respective service)
+     */
+//    private Set&lt;PerformanceId&gt; performances = new HashSet&lt;PerformanceId&gt;();
+
+    /**
+     * &lt;p&gt;
+     * The set of ticket prices available for this show.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The &lt;code&gt;@OneToMany&lt;code&gt; JPA mapping establishes this relationship.
+     * This relationship is bi-directional (a ticket price category knows which show it is part of), and the &lt;code&gt;mappedBy&lt;/code&gt;
+     * attribute establishes this. We cascade all persistence operations to the set of performances, so, for example if a show
+     * is removed, then all of it's ticket price categories are also removed.
+     * &lt;/p&gt;
+     */
+<span class="nc" id="L115">    @OneToMany(mappedBy = &quot;show&quot;, cascade = ALL, fetch = EAGER)</span>
+    private Set&lt;TicketPriceGuide&gt; ticketPriceGuides = new HashSet&lt;TicketPriceGuide&gt;();
+
+    /* Boilerplate getters and setters */
+
+    public Long getId() {
+<span class="nc" id="L121">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="nc" id="L125">        this.id = id;</span>
+<span class="nc" id="L126">    }</span>
+
+    public EventId getEventId() {
+<span class="nc" id="L129">        return eventId;</span>
+    }
+
+    public void setEventId(EventId eventId) {
+<span class="nc" id="L133">        this.eventId = eventId;</span>
+<span class="nc" id="L134">    }</span>
+
+
+    public VenueId getVenueId() {
+<span class="nc" id="L138">        return venueId;</span>
+    }
+
+    public void setVenueId(VenueId venueId) {
+<span class="nc" id="L142">        this.venueId = venueId;</span>
+<span class="nc" id="L143">    }</span>
+
+    public Set&lt;TicketPriceGuide&gt; getTicketPriceGuides() {
+<span class="nc" id="L146">        return ticketPriceGuides;</span>
+    }
+
+    public void setTicketPriceGuides(Set&lt;TicketPriceGuide&gt; ticketPriceGuides) {
+<span class="nc" id="L150">        this.ticketPriceGuides = ticketPriceGuides;</span>
+<span class="nc" id="L151">    }</span>
+
+    /* toString(), equals() and hashCode() for Show, using the natural identity of the object */
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        if (this == o)</span>
+<span class="nc" id="L157">            return true;</span>
+<span class="nc bnc" id="L158" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass())</span>
+<span class="nc" id="L159">            return false;</span>
+
+<span class="nc" id="L161">        Show show = (Show) o;</span>
+
+<span class="nc bnc" id="L163" title="All 6 branches missed.">        if (eventId != null ? !eventId.equals(show.eventId) : show.eventId != null)</span>
+<span class="nc" id="L164">            return false;</span>
+<span class="nc bnc" id="L165" title="All 6 branches missed.">        if (venueId != null ? !venueId.equals(show.venueId) : show.venueId != null)</span>
+<span class="nc" id="L166">            return false;</span>
+
+<span class="nc" id="L168">        return true;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        int result = eventId != null ? eventId.hashCode() : 0;</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        result = 31 * result + (venueId != null ? venueId.hashCode() : 0);</span>
+<span class="nc" id="L175">        return result;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L180">        return eventId + &quot; at &quot; + venueId;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

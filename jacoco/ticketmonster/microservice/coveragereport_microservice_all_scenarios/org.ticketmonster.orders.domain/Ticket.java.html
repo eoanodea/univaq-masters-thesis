@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Ticket.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice All Scenarios</a> &gt; <a href="index.source.html" class="el_package">org.ticketmonster.orders.domain</a> &gt; <span class="el_source">Ticket.java</span></div><h1>Ticket.java</h1><pre class="source lang-java linenums">package org.ticketmonster.orders.domain;
+
+import org.teiid.spring.annotations.InsertQuery;
+import org.teiid.spring.annotations.SelectQuery;
+import org.teiid.spring.annotations.UpdateQuery;
+
+import static javax.persistence.GenerationType.IDENTITY;
+import static javax.persistence.GenerationType.TABLE;
+
+import java.io.Serializable;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+
+/**
+ * &lt;p&gt;
+ * A ticket represents a seat sold for a particular price.
+ * &lt;/p&gt;
+ * 
+ * @author Shane Bryzak
+ * @author Marius Bogoevici
+ * @author Pete Muir
+ */
+/*
+ * We suppress the warning about not specifying a serialVersionUID, as we are still developing this app, and want the JVM to
+ * generate the serialVersionUID for us. When we put this app into production, we'll generate and embed the serialVersionUID
+ */
+@SuppressWarnings(&quot;serial&quot;)
+@SelectQuery(&quot;SELECT id, CAST(price AS double), number, rowNumber AS row_number, section_id, ticketCategory_id AS ticket_category_id, tickets_id AS booking_id  FROM legacyDS.Ticket &quot; +
+        &quot;UNION ALL SELECT id, price, number,  row_number, section_id, ticket_category_id, booking_id FROM ordersDS.ticket&quot;)
+@InsertQuery(&quot;FOR EACH ROW \n&quot;+
+        &quot;BEGIN ATOMIC \n&quot; +
+        &quot;INSERT INTO ordersDS.ticket (id, price, number,  row_number, section_id, ticket_category_id) values (NEW.id, CAST(NEW.price as float),  NEW.number,  NEW.row_number, NEW.section_id, NEW.ticket_category_id);\n&quot; +
+        &quot;END&quot;)
+@UpdateQuery(&quot;FOR EACH ROW\n&quot; +
+        &quot;BEGIN\n&quot; +
+        &quot;  IF(changing.booking_id) \n&quot; +
+        &quot;  BEGIN\n&quot; +
+        &quot;      UPDATE ordersDS.ticket set booking_id=NEW.booking_id where id = old.id;\n&quot; +
+        &quot;  END\n&quot; +
+        &quot;END&quot;)
+@Entity
+@Table(name = &quot;ticket&quot;)
+public class Ticket implements Serializable {
+
+    /* Declaration of fields */
+
+    @TableGenerator(name = &quot;ticket&quot;,
+            table = &quot;id_generator&quot;,
+            pkColumnName = &quot;idKey&quot;,
+            valueColumnName = &quot;idvalue&quot;,
+            pkColumnValue = &quot;ticket&quot;,
+            allocationSize = 1)
+    @Id
+    @GeneratedValue(strategy = TABLE, generator = &quot;ticket&quot;)
+    private Long id;
+
+    /**
+     * &lt;p&gt;
+     * The seat for which this ticket has been sold.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The seat must be specifed, and the Bean Validation constraint &lt;code&gt;@NotNull&lt;/code&gt; ensures this.
+     * &lt;/p&gt;
+     */
+    @NotNull
+    @Embedded
+    private Seat seat;
+
+    /**
+     * &lt;p&gt;
+     * The ticket price category for which this ticket has been sold.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The ticket price category must be specifed, and the Bean Validation constraint &lt;code&gt;@NotNull&lt;/code&gt; ensures this.
+     * &lt;/p&gt;
+     */
+    @ManyToOne
+    @NotNull
+    private TicketCategory ticket_category;
+
+    /**
+     * The price which was charged for the ticket.
+     */
+    private float price;
+
+    /** No-arg constructor for persistence */
+<span class="nc" id="L90">    public Ticket() {</span>
+
+<span class="nc" id="L92">    }</span>
+
+<span class="nc" id="L94">    public Ticket(Seat seat, TicketCategory ticketCategory, float price) {</span>
+<span class="nc" id="L95">        this.seat = seat;</span>
+<span class="nc" id="L96">        this.ticket_category = ticketCategory;</span>
+<span class="nc" id="L97">        this.price = price;</span>
+<span class="nc" id="L98">    }</span>
+
+    /* Boilerplate getters and setters */
+
+    public Long getId() {
+<span class="nc" id="L103">        return id;</span>
+    }
+
+    public TicketCategory getTicketCategory() {
+<span class="nc" id="L107">        return ticket_category;</span>
+    }
+
+    public float getPrice() {
+<span class="nc" id="L111">        return price;</span>
+    }
+
+    public Seat getSeat() {
+<span class="nc" id="L115">        return seat;</span>
+    }
+    
+    @Override
+    public String toString() {
+<span class="nc" id="L120">        return new StringBuilder().append(getSeat()).append(&quot; @ &quot;).append(getPrice()).append(&quot; (&quot;).append(getTicketCategory()).append(&quot;)&quot;).toString(); </span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

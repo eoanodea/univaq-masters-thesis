@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NestedMediaItemDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report monolith All Scenarios</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.rest.dto</a> &gt; <span class="el_source">NestedMediaItemDTO.java</span></div><h1>NestedMediaItemDTO.java</h1><pre class="source lang-java linenums">package org.jboss.examples.ticketmonster.rest.dto;
+
+import java.io.Serializable;
+import org.jboss.examples.ticketmonster.model.MediaItem;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import org.jboss.examples.ticketmonster.model.MediaType;
+
+public class NestedMediaItemDTO implements Serializable
+{
+
+   private Long id;
+   private MediaType mediaType;
+   private String url;
+
+   public NestedMediaItemDTO()
+<span class="fc" id="L17">   {</span>
+<span class="fc" id="L18">   }</span>
+
+   public NestedMediaItemDTO(final MediaItem entity)
+<span class="fc" id="L21">   {</span>
+<span class="pc bpc" id="L22" title="1 of 2 branches missed.">      if (entity != null)</span>
+      {
+<span class="fc" id="L24">         this.id = entity.getId();</span>
+<span class="fc" id="L25">         this.mediaType = entity.getMediaType();</span>
+<span class="fc" id="L26">         this.url = entity.getUrl();</span>
+      }
+<span class="fc" id="L28">   }</span>
+
+   public MediaItem fromDTO(MediaItem entity, EntityManager em)
+   {
+<span class="fc bfc" id="L32" title="All 2 branches covered.">      if (entity == null)</span>
+      {
+<span class="fc" id="L34">         entity = new MediaItem();</span>
+      }
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">      if (this.id != null)</span>
+      {
+<span class="fc" id="L38">         TypedQuery&lt;MediaItem&gt; findByIdQuery = em</span>
+<span class="fc" id="L39">               .createQuery(</span>
+                     &quot;SELECT DISTINCT m FROM MediaItem m WHERE m.id = :entityId&quot;,
+                     MediaItem.class);
+<span class="fc" id="L42">         findByIdQuery.setParameter(&quot;entityId&quot;, this.id);</span>
+         try
+         {
+<span class="fc" id="L45">            entity = findByIdQuery.getSingleResult();</span>
+         }
+<span class="nc" id="L47">         catch (javax.persistence.NoResultException nre)</span>
+         {
+<span class="nc" id="L49">            entity = null;</span>
+<span class="fc" id="L50">         }</span>
+<span class="fc" id="L51">         return entity;</span>
+      }
+<span class="nc" id="L53">      entity.setMediaType(this.mediaType);</span>
+<span class="nc" id="L54">      entity.setUrl(this.url);</span>
+<span class="nc" id="L55">      entity = em.merge(entity);</span>
+<span class="nc" id="L56">      return entity;</span>
+   }
+
+   public Long getId()
+   {
+<span class="fc" id="L61">      return this.id;</span>
+   }
+
+   public void setId(final Long id)
+   {
+<span class="fc" id="L66">      this.id = id;</span>
+<span class="fc" id="L67">   }</span>
+
+   public MediaType getMediaType()
+   {
+<span class="fc" id="L71">      return this.mediaType;</span>
+   }
+
+   public void setMediaType(final MediaType mediaType)
+   {
+<span class="nc" id="L76">      this.mediaType = mediaType;</span>
+<span class="nc" id="L77">   }</span>
+
+   public String getUrl()
+   {
+<span class="fc" id="L81">      return this.url;</span>
+   }
+
+   public void setUrl(final String url)
+   {
+<span class="nc" id="L86">      this.url = url;</span>
+<span class="nc" id="L87">   }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

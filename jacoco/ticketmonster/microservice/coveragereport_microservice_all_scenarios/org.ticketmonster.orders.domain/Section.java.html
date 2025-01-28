@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Section.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice All Scenarios</a> &gt; <a href="index.source.html" class="el_package">org.ticketmonster.orders.domain</a> &gt; <span class="el_source">Section.java</span></div><h1>Section.java</h1><pre class="source lang-java linenums">package org.ticketmonster.orders.domain;
+
+import static javax.persistence.GenerationType.IDENTITY;
+
+import java.io.Serializable;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotEmpty;
+import org.teiid.spring.annotations.SelectQuery;
+
+/**
+ * &lt;p&gt;
+ * A section is a specific area within a venueId layout. A venueId layout may consist of multiple sections.
+ * &lt;/p&gt;
+ * 
+ * &lt;p&gt;
+ * The name and venueId form the natural id of this entity, and therefore must be unique. JPA requires us to use the class level
+ * &lt;code&gt;@Table&lt;/code&gt; constraint.
+ * &lt;/p&gt;
+ * 
+ * @author Shane Bryzak
+ * @author Pete Muir
+ */
+/*
+ * We suppress the warning about not specifying a serialVersionUID, as we are still developing this app, and want the JVM to
+ * generate the serialVersionUID for us. When we put this app into production, we'll generate and embed the serialVersionUID
+ */
+@SuppressWarnings(&quot;serial&quot;)
+@SelectQuery(&quot;SELECT s.id, s.description, s.name, s.numberOfRows AS number_of_rows, s.rowCapacity AS row_capacity, venue_id, v.name AS venue_name FROM legacyDS.Section s JOIN legacyDS.Venue v ON s.venue_id=v.id;&quot;)
+@Entity
+@Table(name = &quot;section&quot;, uniqueConstraints=@UniqueConstraint(columnNames={&quot;name&quot;, &quot;venue_id&quot;}))
+/*
+ * We indicate that some properties of the class shouldn't be marshalled in JSON format
+ */
+<span class="nc" id="L37">public class Section implements Serializable {</span>
+
+    /* Declaration of fields */
+
+    /**
+     * The synthetic id of the object.
+     */
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    private Long id;
+
+    /**
+     * &lt;p&gt;
+     * The short name of the section, may be a code such as A12, G7, etc.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The
+     * &lt;code&gt;@NotEmpty&lt;code&gt; Bean Validation constraint means that the section name must be at least 1 character.
+     * &lt;/p&gt;
+     */
+    @NotEmpty
+    private String name;
+
+    /**
+     * &lt;p&gt;
+     * The description of the section, such as 'Rear Balcony', etc.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The
+     * &lt;code&gt;@NotEmpty&lt;code&gt; Bean Validation constraint means that the section description must be at least 1 character.
+     * &lt;/p&gt;
+     */
+    @NotEmpty
+    private String description;
+
+    /**
+     * &lt;p&gt;
+     * The venueId to which this section belongs. The &lt;code&gt;@ManyToOne&lt;code&gt; JPA mapping establishes this relationship.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The &lt;code&gt;@NotNull&lt;/code&gt; Bean Validation constraint means that the venueId must be specified.
+     * &lt;/p&gt;
+     */
+    @NotNull
+    @Embedded
+    private VenueId venueId;
+
+    /**
+     * The number of rows that make up the section.
+     */
+    @Column(name = &quot;number_of_rows&quot;)
+    private int numberOfRows;
+
+    /**
+     * The number of seats in a row.
+     */
+    @Column(name = &quot;row_capacity&quot;)
+    private int rowCapacity;
+
+    /* Boilerplate getters and setters */
+    
+    public Long getId() {
+<span class="nc" id="L102">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="nc" id="L106">        this.id = id;</span>
+<span class="nc" id="L107">    }</span>
+
+    public String getName() {
+<span class="nc" id="L110">        return name;</span>
+    }
+
+    public void setName(String name) {
+<span class="nc" id="L114">        this.name = name;</span>
+<span class="nc" id="L115">    }</span>
+
+    public String getDescription() {
+<span class="nc" id="L118">        return description;</span>
+    }
+
+    public void setDescription(String description) {
+<span class="nc" id="L122">        this.description = description;</span>
+<span class="nc" id="L123">    }</span>
+
+    public int getNumberOfRows() {
+<span class="nc" id="L126">        return numberOfRows;</span>
+    }
+
+    public void setNumberOfRows(int numberOfRows) {
+<span class="nc" id="L130">        this.numberOfRows = numberOfRows;</span>
+<span class="nc" id="L131">    }</span>
+
+    public int getRowCapacity() {
+<span class="nc" id="L134">        return rowCapacity;</span>
+    }
+
+    public void setRowCapacity(int rowCapacity) {
+<span class="nc" id="L138">        this.rowCapacity = rowCapacity;</span>
+<span class="nc" id="L139">    }</span>
+
+    public int getCapacity() {
+<span class="nc" id="L142">        return this.rowCapacity * this.numberOfRows;</span>
+    }
+
+    public VenueId getVenueId() {
+<span class="nc" id="L146">        return venueId;</span>
+    }
+
+    public void setVenueId(VenueId venueId) {
+<span class="nc" id="L150">        this.venueId = venueId;</span>
+<span class="nc" id="L151">    }</span>
+    
+    /* toString(), equals() and hashCode() for Section, using the natural identity of the object */
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        if (this == o)</span>
+<span class="nc" id="L158">            return true;</span>
+<span class="nc bnc" id="L159" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass())</span>
+<span class="nc" id="L160">            return false;</span>
+
+<span class="nc" id="L162">        Section section = (Section) o;</span>
+
+<span class="nc bnc" id="L164" title="All 6 branches missed.">        if (venueId != null ? !venueId.equals(section.venueId) : section.venueId != null)</span>
+<span class="nc" id="L165">            return false;</span>
+<span class="nc bnc" id="L166" title="All 6 branches missed.">        if (name != null ? !name.equals(section.name) : section.name != null)</span>
+<span class="nc" id="L167">            return false;</span>
+
+<span class="nc" id="L169">        return true;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        int result = name != null ? name.hashCode() : 0;</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        result = 31 * result + (venueId != null ? venueId.hashCode() : 0);</span>
+<span class="nc" id="L176">        return result;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L181">        return name;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

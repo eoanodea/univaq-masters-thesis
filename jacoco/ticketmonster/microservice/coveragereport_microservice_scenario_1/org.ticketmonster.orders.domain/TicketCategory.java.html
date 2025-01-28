@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TicketCategory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice Scenario 1</a> &gt; <a href="index.source.html" class="el_package">org.ticketmonster.orders.domain</a> &gt; <span class="el_source">TicketCategory.java</span></div><h1>TicketCategory.java</h1><pre class="source lang-java linenums">package org.ticketmonster.orders.domain;
+
+import static javax.persistence.GenerationType.IDENTITY;
+
+import java.io.Serializable;
+
+import javax.persistence.*;
+
+import org.hibernate.validator.constraints.NotEmpty;
+import org.teiid.spring.annotations.SelectQuery;
+
+/**
+ * &lt;p&gt;
+ * A lookup table containing the various ticket categories. E.g. Adult, Child, Pensioner, etc.
+ * &lt;/p&gt;
+ * 
+ * @author Shane Bryzak
+ * @author Pete Muir
+ */
+/*
+ * We suppress the warning about not specifying a serialVersionUID, as we are still developing this app, and want the JVM to
+ * generate the serialVersionUID for us. When we put this app into production, we'll generate and embed the serialVersionUID
+ */
+@SuppressWarnings(&quot;serial&quot;)
+@SelectQuery(&quot;SELECT id, description FROM legacyDS.TicketCategory&quot;)
+@Table(name = &quot;ticket_category&quot;)
+@Entity
+<span class="nc" id="L28">public class TicketCategory implements Serializable {</span>
+
+    /* Declaration of fields */
+
+    /**
+     * The synthetic id of the object.
+     */
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    private Long id;
+
+    /**
+     * &lt;p&gt;
+     * The description of the of ticket category.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The description forms the natural id of the ticket category, and so must be unique.
+     * &lt;/p&gt;
+     * 
+     * &lt;p&gt;
+     * The description must not be null and must be one or more characters, the Bean Validation constrain &lt;code&gt;@NotEmpty&lt;/code&gt;
+     * enforces this.
+     * &lt;/p&gt;
+     * 
+     */
+    @Column(unique = true)
+    @NotEmpty
+    private String description;
+
+    /* Boilerplate getters and setters */
+
+    public Long getId() {
+<span class="nc" id="L61">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="nc" id="L65">        this.id = id;</span>
+<span class="nc" id="L66">    }</span>
+
+    public String getDescription() {
+<span class="nc" id="L69">        return description;</span>
+    }
+
+    public void setDescription(String description) {
+<span class="nc" id="L73">        this.description = description;</span>
+<span class="nc" id="L74">    }</span>
+
+    /* toString(), equals() and hashCode() for TicketCategory, using the natural identity of the object */
+
+    @Override
+    public String toString() {
+<span class="nc" id="L80">        return description;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L85">        final int prime = 31;</span>
+<span class="nc" id="L86">        int result = 1;</span>
+<span class="nc" id="L87">        result = prime * result</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                + ((description == null) ? 0 : description.hashCode());</span>
+<span class="nc" id="L89">        return result;</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (this == obj)</span>
+<span class="nc" id="L95">            return true;</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (obj == null)</span>
+<span class="nc" id="L97">            return false;</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (!(obj instanceof TicketCategory))</span>
+<span class="nc" id="L99">            return false;</span>
+<span class="nc" id="L100">        TicketCategory other = (TicketCategory) obj;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (description == null) {</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            if (other.description != null)</span>
+<span class="nc" id="L103">                return false;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        } else if (!description.equals(other.description))</span>
+<span class="nc" id="L105">            return false;</span>
+<span class="nc" id="L106">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrdersRequestDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ticketmonster Coverage Report microservice Scenario 1</a> &gt; <a href="index.source.html" class="el_package">org.jboss.examples.ticketmonster.orders</a> &gt; <span class="el_source">OrdersRequestDTO.java</span></div><h1>OrdersRequestDTO.java</h1><pre class="source lang-java linenums">/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * &lt;p&gt;
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * &lt;p&gt;
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.jboss.examples.ticketmonster.orders;
+
+import org.jboss.examples.ticketmonster.rest.BookingRequest;
+import org.jboss.examples.ticketmonster.rest.TicketRequest;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by ceposta 
+ * &lt;a href=&quot;http://christianposta.com/blog&gt;http://christianposta.com/blog&lt;/a&gt;.
+ */
+public class OrdersRequestDTO {
+
+<span class="nc" id="L31">    private List&lt;TicketRequest&gt; ticketRequests = new ArrayList&lt;TicketRequest&gt;();</span>
+    private long performance;
+    private String email;
+    private boolean synthetic;
+
+<span class="nc" id="L36">    public OrdersRequestDTO(){</span>
+
+<span class="nc" id="L38">    }</span>
+
+<span class="nc" id="L40">    public OrdersRequestDTO(BookingRequest bookingRequest, boolean synthetic) {</span>
+<span class="nc" id="L41">        this.ticketRequests = new ArrayList&lt;&gt;(bookingRequest.getTicketRequests());</span>
+<span class="nc" id="L42">        this.performance = bookingRequest.getPerformance();</span>
+<span class="nc" id="L43">        this.email = bookingRequest.getEmail();</span>
+<span class="nc" id="L44">        this.synthetic = synthetic;</span>
+<span class="nc" id="L45">    }</span>
+
+    public List&lt;TicketRequest&gt; getTicketRequests() {
+<span class="nc" id="L48">        return ticketRequests;</span>
+    }
+
+    public void setTicketRequests(List&lt;TicketRequest&gt; ticketRequests) {
+<span class="nc" id="L52">        this.ticketRequests = ticketRequests;</span>
+<span class="nc" id="L53">    }</span>
+
+    public long getPerformance() {
+<span class="nc" id="L56">        return performance;</span>
+    }
+
+    public void setPerformance(long performance) {
+<span class="nc" id="L60">        this.performance = performance;</span>
+<span class="nc" id="L61">    }</span>
+
+    public String getEmail() {
+<span class="nc" id="L64">        return email;</span>
+    }
+
+    public void setEmail(String email) {
+<span class="nc" id="L68">        this.email = email;</span>
+<span class="nc" id="L69">    }</span>
+
+    public boolean isSynthetic() {
+<span class="nc" id="L72">        return synthetic;</span>
+    }
+
+    public void setSynthetic(boolean synthetic) {
+<span class="nc" id="L76">        this.synthetic = synthetic;</span>
+<span class="nc" id="L77">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
