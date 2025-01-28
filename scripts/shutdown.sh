@@ -24,7 +24,7 @@ if [[ "$1" == "--monolith" ]]; then
   echo "Shutting down monolithic containers at $application_dir_path"
   containers_running=$(docker-compose -f "$application_dir_path/monolith-compose.yml" ps -q | awk '{print $1}')
 elif [[ "$1" == "--microservice" ]]; then
-  echo "Shutting down monolithic containers at $application_dir_path"
+  echo "Shutting down microservice containers at $application_dir_path"
   containers_running=$(docker-compose -f "$application_dir_path/microservice-compose.yml" ps -q | awk '{print $1}')
 elif [[ "$1" == "--all" ]]; then
   echo "Shutting down all containers at $application_dir_path"
@@ -32,20 +32,21 @@ elif [[ "$1" == "--all" ]]; then
   containers_running+=$(docker-compose -f "$application_dir_path/microservice-compose.yml" ps -q | awk '{print $1}')
 else
   # Invalid or no flag provided
-   echo "Invalid flag or no flag provided. Usage: ./shutdown.sh [--monolith | --microservice | --all] --application_dir_path=<path>"
+  echo "Invalid flag or no flag provided. Usage: ./shutdown.sh [--monolith | --microservice | --all] --application_dir_path=<path>"
   exit 1
 fi
 
-
 # Check if any containers are running
-# containers_running=$(docker-compose -f "$application_dir_path/monolith-compose.yml" ps -q | awk '{print $1}')
-
 if [[ -n "$containers_running" ]]; then
-  # Some containers are running, shut it down
+  # Some containers are running, shut them down
   echo "Shutting down any running containers..."
-  docker-compose -f "$application_dir_path/monolith-compose.yml" down
-  docker-compose -f "$application_dir_path/microservice-compose.yml" down
+  docker-compose -f "$application_dir_path/monolith-compose.yml" down --remove-orphans
+  docker-compose -f "$application_dir_path/microservice-compose.yml" down --remove-orphans
 else
   # Neither monolith nor microservices containers are running
   echo "No running containers found."
 fi
+
+# Attempt to remove the network
+echo "Removing Docker network..."
+docker network prune -f

@@ -110,6 +110,12 @@ For Ticket Monster MS
 ./scripts/coverage.sh --scenario=all --application_name=ticketmonster --architecture=microservice --server_url="http://localhost:5000"
 ```
 
+Run all three quick in one go
+
+```
+./scripts/coverage.sh --scenario=1 --application_name=ticketmonster --architecture=microservice --server_url="http://localhost:5000" && ./scripts/coverage.sh --scenario=2 --application_name=ticketmonster --architecture=microservice --server_url="http://localhost:5000" && ./scripts/coverage.sh --scenario=3 --application_name=ticketmonster --architecture=microservice --server_url="http://localhost:5000"
+```
+
 # UML Sequence Diagrams For each scenario
 
 ## Scenario 1

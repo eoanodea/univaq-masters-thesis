@@ -60,8 +60,9 @@ run_coverage() {
 
     sleep 5
 
+    
     # Dump the coverage data for the current scenario
-    if [ "$architecture" == "monolith" ]; then
+    if [ "$architecture" == "monolith" ]; then    
         dump_coverage "$scenario" "monolith" 6300
     else
         dump_coverage "$scenario" "backend-v2" 6300
@@ -120,6 +121,15 @@ fi
 # List of all scenarios
 all_scenarios=("1" "2" "3")  # Add all your scenarios here
 
+# Remove existing .exec files and reports for the specific scenario or all scenarios
+if [ "$scenario_number" == "all" ]; then
+    rm -f jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_*_all_scenarios.exec
+    rm -rf jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_all_scenarios
+else
+    rm -f jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_*_scenario_${scenario_number}.exec
+    rm -rf jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_scenario_${scenario_number}
+fi
+
 if [ "$scenario_number" == "all" ]; then
     for scenario in "${all_scenarios[@]}"; do
         run_coverage "$scenario"
@@ -128,32 +138,57 @@ if [ "$scenario_number" == "all" ]; then
     # Merge the coverage data files
     if [ "$architecture" == "monolith" ]; then
         java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main merge jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_monolith_scenario_*.exec --destfile jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_all_scenarios.exec
+        java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main report "jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_all_scenarios.exec" --classfiles "./applications/${application_name}/monolith/target/classes" --sourcefiles "./applications/${application_name}/monolith/src/main/java" --html jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_all_scenarios
     else
-        java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main merge jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_backend-v2_scenario_*.exec jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_orders-service_scenario_*.exec --destfile jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_all_scenarios.exec
+        java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main merge \
+        jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_backend-v2_scenario_*.exec \
+        jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_orders-service_scenario_*.exec \
+        --destfile jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_all_scenarios.exec
+
+        java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main report \
+            "jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_all_scenarios.exec" \
+            --classfiles "./applications/${application_name}/backend-v2/target/classes" \
+            --classfiles "./applications/${application_name}/orders-service/target/classes" \
+            --sourcefiles "./applications/${application_name}/backend-v2/src/main/java" \
+            --sourcefiles "./applications/${application_name}/orders-service/src/main/java" \
+            --html jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_all_scenarios
+    
     fi
 
     if [ $? -ne 0 ]; then
-        echo "Failed to merge the coverage data"
+        echo "Failed to merge and generate the coverage data"
         shutdown
     fi
 
-    # Generate the coverage report from the merged file
-    java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main report "jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_all_scenarios.exec" --classfiles "./applications/${application_name}/monolith/target/classes" --sourcefiles "./applications/${application_name}/monolith/src/main/java" --html jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_all_scenarios
-    if [ $? -ne 0 ]; then
-        echo "Failed to generate the coverage report"
-        shutdown
-    fi
+    # # Generate the coverage report from the merged file
+    # java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main report "jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_all_scenarios.exec" --classfiles "./applications/${application_name}/monolith/target/classes" --sourcefiles "./applications/${application_name}/monolith/src/main/java" --html jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_all_scenarios
+    # if [ $? -ne 0 ]; then
+    #     echo "Failed to generate the coverage report"
+    #     shutdown
+    # fi
 
     open jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_all_scenarios/index.html
 else
     run_coverage "$scenario_number"
 
     # Generate the coverage report for the single scenario
-        if [ "$architecture" == "monolith" ]; then
+    if [ "$architecture" == "monolith" ]; then
         java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main report "jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_monolith_scenario_${scenario_number}.exec" --classfiles "./applications/${application_name}/monolith/target/classes" --sourcefiles "./applications/${application_name}/monolith/src/main/java" --html jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_scenario_${scenario_number}
     else
-        java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main merge jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_backend-v2_scenario_${scenario_number}.exec jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_orders-service_scenario_${scenario_number}.exec --destfile jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_scenario_${scenario_number}.exec
-        java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main report "jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_scenario_${scenario_number}.exec" --classfiles "./applications/${application_name}/backend-v2/target/classes" --sourcefiles "./applications/${application_name}/backend-v2/src/main/java" --html jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_scenario_${scenario_number}
+        java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main merge \
+         jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_backend-v2_scenario_${scenario_number}.exec \
+         jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_orders-service_scenario_${scenario_number}.exec \
+         --destfile jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_scenario_${scenario_number}.exec
+        
+        # java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main report "jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_scenario_${scenario_number}.exec" --classfiles "./applications/${application_name}/backend-v2/target/classes" --sourcefiles "./applications/${application_name}/backend-v2/src/main/java" --html jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_scenario_${scenario_number}
+
+        java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main report \
+          "jacoco/$application_name/$architecture/coverage_${application_name}_${architecture}_scenario_${scenario_number}.exec" \
+          --classfiles "./applications/${application_name}/backend-v2/target/classes" \
+          --classfiles "./applications/${application_name}/orders-service/target/classes" \
+          --sourcefiles "./applications/${application_name}/backend-v2/src/main/java" \
+          --sourcefiles "./applications/${application_name}/orders-service/src/main/java" \
+          --html "jacoco/$application_name/$architecture/coveragereport_${application_name}_${architecture}_scenario_${scenario_number}"
     fi
     
     if [ $? -ne 0 ]; then
