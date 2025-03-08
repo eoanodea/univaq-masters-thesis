@@ -116,6 +116,18 @@ Run all three quick in one go
 ./scripts/coverage.sh --scenario=1 --application_name=ticketmonster --architecture=microservice --server_url="http://localhost:5000" && ./scripts/coverage.sh --scenario=2 --application_name=ticketmonster --architecture=microservice --server_url="http://localhost:5000" && ./scripts/coverage.sh --scenario=3 --application_name=ticketmonster --architecture=microservice --server_url="http://localhost:5000"
 ```
 
+For Pet Clinic Monolith
+
+```
+./scripts/coverage.sh --scenario=all --application_name=petclinic --architecture=monolith --server_url="http://localhost:9966"
+```
+
+For Pet Clinic MS
+
+```
+./scripts/coverage.sh --scenario=all --application_name=petclinic --architecture=microservice --server_url="http://localhost:5000"
+```
+
 # UML Sequence Diagrams For each scenario
 
 ## Scenario 1

@@ -24,7 +24,7 @@ application_dir_path="${PROJECT_DIR}/${2#*=}"
 if [[ "$1" == "--all" ]]; then
   # Execute monolithic setup using docker-compose.yml
   echo "Setting up both monolith and microservice systems..."
-  docker-compose -f "$application_dir_path/docker-compose.yml" up -d --remove-orphans --build
+  docker-compose -f "$application_dir_path/docker-compose.yml" up -d --remove-orphans
 
   echo "Setup complete"
 elif [[ "$1" == "--monolith" ]]; then

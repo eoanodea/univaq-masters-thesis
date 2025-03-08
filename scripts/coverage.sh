@@ -24,6 +24,9 @@ dump_coverage() {
 
     echo "Dumping the coverage data for scenario: $scenario, service: $service"
     java -cp "./jacoco/lib/jacococli.jar:./jacoco/lib/args4j.jar" org.jacoco.cli.internal.Main dump --address localhost --port $port --destfile jacoco/$application_name/$architecture/coverage_${architecture}_${service}_scenario_${scenario}.exec
+
+    exit 1
+
     if [ $? -ne 0 ]; then
         echo "Failed to dump the coverage data for service: $service"
         shutdown
@@ -35,7 +38,6 @@ run_coverage() {
     local scenario=$1
 
     echo "Starting containers for the application: $application_name, scenario: $scenario"
-
     # Start the application
     ./scripts/startup.sh --${architecture} --application_dir_path="./applications/${application_name}"
     if [ $? -ne 0 ]; then
@@ -43,13 +45,15 @@ run_coverage() {
         shutdown
     fi
 
-    sleep 10
+    sleep 20
 
-    # Run the web crawler
-    python3 ./selenium/web_crawler.py ./workflows/${application_name}/scenario-${scenario}/${architecture}/frontend.yml localhost
-    if [ $? -ne 0 ]; then
-        echo "Failed to run the web crawler"
-        shutdown
+    if [[ $application_name == "ticketmonster" ]]; then
+        # Run the web crawler
+        python3 ./selenium/web_crawler.py ./workflows/${application_name}/scenario-${scenario}/${architecture}/frontend.yml localhost
+        if [ $? -ne 0 ]; then
+            echo "Failed to run the web crawler"
+            shutdown
+        fi
     fi
 
     newman run "./workflows/${application_name}/scenario-${scenario}/${architecture}/workload.json" -n "1" --env-var "server_url=${server_url}" --delay-request 200
@@ -60,7 +64,6 @@ run_coverage() {
 
     sleep 5
 
-    
     # Dump the coverage data for the current scenario
     if [ "$architecture" == "monolith" ]; then    
         dump_coverage "$scenario" "monolith" 6300

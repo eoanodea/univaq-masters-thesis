@@ -4,5 +4,8 @@ services:
     build:
       context: ./spring-petclinic-rest/
       dockerfile: Dockerfile
+    volumes:
+      - ./spring-petclinic-rest/target:/target:rw
     ports:
       - 9966:9966
+      - 6300:6300
